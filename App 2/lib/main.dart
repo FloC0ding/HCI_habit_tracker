@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -12,7 +14,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HabitTrackerPage(),
+      home: const HabitTrackerPage(),
     );
   }
 }
@@ -28,6 +30,8 @@ class Habit {
 }
 
 class HabitTrackerPage extends StatefulWidget {
+  const HabitTrackerPage({super.key});
+
   @override
   _HabitTrackerPageState createState() => _HabitTrackerPageState();
 }
@@ -63,7 +67,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Habit Tracker'),
+        title: const Text('Habit Tracker'),
       ),
 
       //List with all the habits
@@ -74,7 +78,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
           //Cards are clickable!
           return Card(
             elevation: 4.0, //Shadow effect
-            margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: InkWell(
               onTap: () {
                 // Handle the tap event
@@ -96,7 +100,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
       //Add new Habit button
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddHabitDialog,
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -113,13 +117,13 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
         return StatefulBuilder(
           builder: (context, setStateDialog){
             return AlertDialog(
-              title: Text('Add New Habit'),
+              title: const Text('Add New Habit'),
               content: SingleChildScrollView(
                 child: Column(
                   children: <Widget>[
                     TextField(
                       controller: titleController,
-                      decoration: InputDecoration(labelText: 'Title'),
+                      decoration: const InputDecoration(labelText: 'Title'),
                     ),
                     DropdownButton<IconData>(
                       value: _selectedIcon ?? availableIcons.first,
@@ -140,13 +144,13 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
               ),
               actions: <Widget>[
                 TextButton(
-                  child: Text('Cancel'),
+                  child: const Text('Cancel'),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                 ),
                 TextButton(
-                  child: Text('Add'),
+                  child: const Text('Add'),
                   onPressed: () {
                     _addHabit(titleController.text, "Some description", selectedIcon);
                     Navigator.of(context).pop();
