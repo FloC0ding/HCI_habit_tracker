@@ -23,14 +23,23 @@ class Habit {
   String title;
   String description;
   int value;
+  String? unitValue;
   IconData iconData;
+  Unit? unit; // New property
 
   Habit({
     required this.title,
     required this.description,
     required this.value,
     required this.iconData,
+    this.unitValue,
+    this.unit, // Initialize to null
   });
+}
+
+enum Unit {
+  Duration,
+  Length,
 }
 
 class HabitTrackerPage extends StatefulWidget {
@@ -65,10 +74,10 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     _habits.addAll(_originalHabits);
   }
 
-  void _addHabit(String title, String description, IconData icon) {
+  void _addHabit(String title, String description, String unitValue, IconData icon) {
     if (title.isNotEmpty) {
       setState(() {
-        _habits.add(Habit(title: title, description: description, value: 0, iconData: icon));
+        _habits.add(Habit(title: title, description: description, value: 0, unitValue: unitValue, iconData: icon));
       });
     }
   }
@@ -146,19 +155,97 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
               habit.value++;
             });
           },
-          child: ListTile(
-            leading: Icon(habit.iconData),
-            title: Text(habit.title),
-            subtitle: Text("Count: ${habit.value}"),
+          child: Column(
+            children: [
+              ListTile(
+                leading: Icon(habit.iconData),
+                title: Text(habit.title),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Count: ${habit.value}"),
+                    Row (children: [
+                      Text(" ${habit.unitValue}"),
+                      Text(" ${habit.unit == Unit.Duration ? 'min' : 'km'}"),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  _showDetailsPopup(context, habit);
+                },
+                child: Text('Details'),
+              ),
+            ],
           ),
+
         ),
       ),
     );
   }
 
+void _showDetailsPopup(BuildContext context, Habit habit) async {
+  final RenderBox button = context.findRenderObject() as RenderBox;
+  final RenderBox overlay = Overlay.of(context)!.context.findRenderObject() as RenderBox;
+  final RelativeRect position = RelativeRect.fromRect(
+    Rect.fromPoints(
+      button.localToGlobal(Offset.zero, ancestor: overlay),
+      button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+    ),
+    Offset.zero & overlay.size,
+  );
+
+  await showMenu(
+    context: context,
+    position: position,
+    items: [
+      PopupMenuItem(
+        child: GestureDetector(
+          onTap: () {}, // Prevent taps from being propagated to underlying widgets
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.5,
+            height: MediaQuery.of(context).size.height * 0.5,
+            padding: EdgeInsets.all(20),
+            color: Colors.blue,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Details for ${habit.title}',
+                  style: TextStyle(color: Colors.white, fontSize: 20),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Description: ${habit.description}',
+                  style: TextStyle(color: Colors.white),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close the popup when clicking the close button
+                  },
+                  child: Text('Close'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ],
+    elevation: 8.0,
+  );
+}
+
+
+
+
   Future<void> _showAddHabitDialog() async {
     TextEditingController titleController = TextEditingController();
     IconData selectedIcon = availableIcons.first;
+    TextEditingController selectedValue = TextEditingController();
+    Unit selectedUnit = Unit.Duration;
 
     return showDialog<void>(
       context: context,
@@ -189,6 +276,30 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                         );
                       }).toList(),
                     ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: selectedValue,
+                            decoration: const InputDecoration(labelText: 'Amount/Duration'),
+                          ),
+                        ),
+                        DropdownButton<Unit>(
+                          value: selectedUnit,
+                          onChanged: (Unit? newValue) {
+                            setStateDialog(() {
+                              selectedUnit = newValue!;
+                            });
+                          },
+                          items: Unit.values.map<DropdownMenuItem<Unit>>((Unit value) {
+                            return DropdownMenuItem<Unit>(
+                              value: value,
+                              child: Text(value == Unit.Duration ? 'min' : 'km'),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -202,7 +313,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                 TextButton(
                   child: const Text('Add'),
                   onPressed: () {
-                    _addHabit(titleController.text, "Some description", selectedIcon);
+                    _addHabit(titleController.text, "Some description", selectedValue.text, selectedIcon);
                     Navigator.of(context).pop();
                   },
                 ),
