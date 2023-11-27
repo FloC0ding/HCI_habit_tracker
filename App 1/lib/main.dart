@@ -19,14 +19,18 @@ class MyApp extends StatelessWidget {
   }
 }
 
-//Class Defining what a Habit is
 class Habit {
   String title;
   String description;
   int value;
   IconData iconData;
 
-  Habit({required this.title, required this.description, required this.value, required this.iconData});
+  Habit({
+    required this.title,
+    required this.description,
+    required this.value,
+    required this.iconData,
+  });
 }
 
 class HabitTrackerPage extends StatefulWidget {
@@ -36,55 +40,92 @@ class HabitTrackerPage extends StatefulWidget {
   _HabitTrackerPageState createState() => _HabitTrackerPageState();
 }
 
-//Main Page with the home menu and everything. Also includes the Add new habit dialog
 class _HabitTrackerPageState extends State<HabitTrackerPage> {
-
-  //Variable needed to update the icon in the add new dialog, since it doesn't handle state updates in the showDialog
   IconData? _selectedIcon;
-
-  //Define the list of available icons to choose from
   final List<IconData> availableIcons = [
     Icons.fitness_center,
     Icons.book,
     Icons.music_note,
     Icons.work,
-    // ... add more, potentially also custom icons and icons not from the Icons class
   ];
-  // List storing all the user habits
+  final List<Habit> _originalHabits = [];
   final List<Habit> _habits = [];
+  final TextEditingController _searchController = TextEditingController();
 
-  //Self-explanatory: Add a new habit to the list
+  @override
+  void initState() {
+    super.initState();
+    _originalHabits.addAll([
+      Habit(title: 'Exercise', description: 'Morning workout', value: 0, iconData: Icons.fitness_center),
+      Habit(title: 'Reading', description: 'Read a book', value: 0, iconData: Icons.book),
+      Habit(title: 'Music', description: 'Play an instrument', value: 0, iconData: Icons.music_note),
+      Habit(title: 'Work', description: 'Complete tasks', value: 0, iconData: Icons.work),
+    ]);
+
+    _habits.addAll(_originalHabits);
+  }
+
   void _addHabit(String title, String description, IconData icon) {
-    if(title.isNotEmpty){
+    if (title.isNotEmpty) {
       setState(() {
         _habits.add(Habit(title: title, description: description, value: 0, iconData: icon));
       });
     }
   }
 
-  //Render the stuff in the home menu
+  void _filterSearchResults(String query) {
+    List<Habit> searchResults = [];
+
+    if (query.isNotEmpty) {
+      searchResults.addAll(_originalHabits
+          .where((habit) => habit.title.toLowerCase().contains(query.toLowerCase()))
+          .toList());
+    } else {
+      searchResults.addAll(_originalHabits);
+    }
+
+    setState(() {
+      _habits.clear();
+      _habits.addAll(searchResults);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Habit Tracker'),
+        
       ),
-      body: ListView.builder(
-        itemCount: (_habits.length / 2).ceil(), // Divide by 2 and round up
-        itemBuilder: (context, index) {
-          // Calculate the indices for the left and right habits
-          int leftIndex = index * 2;
-          int rightIndex = (index * 2) + 1;
-
-          return Row(
-            children: [
-              if (leftIndex < _habits.length)
-                _buildHabitCard(_habits[leftIndex]),
-              if (rightIndex < _habits.length)
-                _buildHabitCard(_habits[rightIndex]),
-            ],
-          );
-        },
+      body: Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            onChanged: (value) {
+              _filterSearchResults(value);
+            },
+            decoration: const InputDecoration(
+              labelText: 'Search',
+              hintText: 'Search habits...',
+              prefixIcon: Icon(Icons.search),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: (_habits.length / 2).ceil(),
+              itemBuilder: (context, index) {
+                int leftIndex = index * 2;
+                int rightIndex = (index * 2) + 1;
+                return Row(
+                  children: [
+                    if (leftIndex < _habits.length) _buildHabitCard(_habits[leftIndex]),
+                    if (rightIndex < _habits.length) _buildHabitCard(_habits[rightIndex]),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddHabitDialog,
@@ -100,7 +141,6 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         child: InkWell(
           onTap: () {
-            // Handle the tap event
             print('Habit Pressed: ${habit.title}');
             setState(() {
               habit.value++;
@@ -116,8 +156,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     );
   }
 
-  //Add new Habit dialog
-  Future<void> _showAddHabitDialog() async{ //The Dialog for adding a new habit
+  Future<void> _showAddHabitDialog() async {
     TextEditingController titleController = TextEditingController();
     IconData selectedIcon = availableIcons.first;
 
@@ -126,7 +165,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (context, setStateDialog){
+          builder: (context, setStateDialog) {
             return AlertDialog(
               title: const Text('Add New Habit'),
               content: SingleChildScrollView(
@@ -174,6 +213,65 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
       },
     );
   }
+}
 
+class HabitSearchDelegate extends SearchDelegate<Habit> {
+  final List<Habit> habits;
+  final List<Habit> originalHabits;
 
+  HabitSearchDelegate(this.habits, this.originalHabits);
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: () {
+        // Reset _habits to the original list when the search is canceled
+        habits.clear();
+        habits.addAll(originalHabits);
+        close(context, Habit(title: 'No Selection', description: '', value: 0, iconData: Icons.error));
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return _buildSearchResults();
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return _buildSearchResults();
+  }
+
+  Widget _buildSearchResults() {
+    List<Habit> searchResults = habits
+        .where((habit) => habit.title.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+
+    return ListView.builder(
+      itemCount: searchResults.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(searchResults[index].title),
+          onTap: () {
+            // Fix the issue by providing a single Habit object, not a list
+            close(context, searchResults[index]);
+          },
+        );
+      },
+    );
+  }
 }
