@@ -69,38 +69,49 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
       appBar: AppBar(
         title: const Text('Habit Tracker'),
       ),
-
-      //List with all the habits
       body: ListView.builder(
-        itemCount: _habits.length,
+        itemCount: (_habits.length / 2).ceil(), // Divide by 2 and round up
         itemBuilder: (context, index) {
+          // Calculate the indices for the left and right habits
+          int leftIndex = index * 2;
+          int rightIndex = (index * 2) + 1;
 
-          //Cards are clickable!
-          return Card(
-            elevation: 4.0, //Shadow effect
-            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            child: InkWell(
-              onTap: () {
-                // Handle the tap event
-                print('Habit Pressed: ${_habits[index].title}');
-                setState(() {
-                  _habits[index].value++;
-                });
-              },
-              child: ListTile(
-                leading: Icon(_habits[index].iconData),
-                title: Text(_habits[index].title),
-                subtitle: Text("Count: ${_habits[index].value}"),
-              ),
-            ),
+          return Row(
+            children: [
+              if (leftIndex < _habits.length)
+                _buildHabitCard(_habits[leftIndex]),
+              if (rightIndex < _habits.length)
+                _buildHabitCard(_habits[rightIndex]),
+            ],
           );
         },
       ),
-
-      //Add new Habit button
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddHabitDialog,
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildHabitCard(Habit habit) {
+    return Expanded(
+      child: Card(
+        elevation: 4.0,
+        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        child: InkWell(
+          onTap: () {
+            // Handle the tap event
+            print('Habit Pressed: ${habit.title}');
+            setState(() {
+              habit.value++;
+            });
+          },
+          child: ListTile(
+            leading: Icon(habit.iconData),
+            title: Text(habit.title),
+            subtitle: Text("Count: ${habit.value}"),
+          ),
+        ),
       ),
     );
   }
