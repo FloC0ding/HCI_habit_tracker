@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// flutter pub add flutter_slidable -> cmd in project root
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 void main() {
   runApp(const MyApp());
@@ -52,7 +54,8 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
   ];
   // List storing all the user habits
   final List<Habit> _habits = [];
-
+  //Last Habit that was deleted, used for UNDO function
+  Habit _lastHabit = Habit(title: "no", description: "no", value: 0, iconData: Icons.book);
   //Self-explanatory: Add a new habit to the list
   void _addHabit(String title, String description, IconData icon) {
     if(title.isNotEmpty){
@@ -61,6 +64,25 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
       });
     }
   }
+
+  //Edits Habit at index
+
+  void _editHabit (int index, String newTitle, IconData icon, int newValue) {
+    setState(() {
+      _lastHabit = _habits[index];
+      _habits[index] = Habit(title: newTitle, description: _habits[index].description, value: newValue, iconData: icon);
+    });
+  }
+
+  //Deletes Habit from list
+  void _deleteHabit (int index) {
+    setState(() {
+        _lastHabit = _habits[index];
+        _habits.removeAt(index);
+
+    });
+  }
+
 
   //Render the stuff in the home menu
   @override
@@ -74,25 +96,73 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
       body: ListView.builder(
         itemCount: _habits.length,
         itemBuilder: (context, index) {
-
           //Cards are clickable!
           return Card(
             elevation: 4.0, //Shadow effect
             margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            child: InkWell(
-              onTap: () {
-                // Handle the tap event
-                print('Habit Pressed: ${_habits[index].title}');
-                setState(() {
-                  _habits[index].value++;
-                });
-              },
-              child: ListTile(
-                leading: Icon(_habits[index].iconData),
-                title: Text(_habits[index].title),
-                subtitle: Text("Count: ${_habits[index].value}"),
+             child: Slidable(
+                // Specify a key if the Slidable is dismissible.
+                key: UniqueKey(),
+                // The end action pane is the one at the right side.
+                endActionPane: ActionPane(
+                  motion: const ScrollMotion(),
+                  dismissible: DismissiblePane(
+                      onDismissed: () {_deleteHabit(index);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Deleted \"${_lastHabit.title}\""),
+                          action: SnackBarAction(
+                              label: "UNDO",
+                              onPressed: () => setState(() => _habits.insert(index, _lastHabit),)
+                          ),
+                        ),
+                      );
+
+                      }),
+                  children: [
+                    SlidableAction(
+                      onPressed: (BuildContext context) { _editHabitDialog(index);
+                     },
+                      backgroundColor: const Color(0xFF0392CF),
+                      foregroundColor: Colors.white,
+                      icon: Icons.edit,
+                      label: 'Edit',
+                    ),
+                    SlidableAction(
+                      onPressed: (context) {
+                        _deleteHabit(index);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Deleted \"${_lastHabit.title}\""),
+                            action: SnackBarAction(
+                                label: "UNDO",
+                                onPressed: () => setState(() => _habits.insert(index, _lastHabit),)
+                            ),
+                          ),
+                        );
+                      },
+                      backgroundColor: const Color(0xFFFE4A49),
+                      foregroundColor: Colors.white,
+                      icon: Icons.delete,
+                      label: 'Delete',
+                    ),
+                  ],
+                ),
+              child: InkWell(
+                onTap: () {
+                  // Handle the tap event
+                  print('Habit Pressed: ${_habits[index].title}');
+                  setState(() {
+                    _habits[index].value++;
+                  });
+                },
+                child: ListTile(
+                  leading: Icon(_habits[index].iconData),
+                  title: Text(_habits[index].title),
+                  subtitle: Text("Count: ${_habits[index].value}"),
+                ),
               ),
-            ),
+            )
           );
         },
       ),
@@ -153,6 +223,81 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                   child: const Text('Add'),
                   onPressed: () {
                     _addHabit(titleController.text, "Some description", selectedIcon);
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _editHabitDialog(int index) async{ //The Dialog for adding a new habit
+    TextEditingController titleController = TextEditingController(text: _habits[index].title);
+    TextEditingController numberController = TextEditingController(text: (_habits[index].value).toString());
+    IconData selectedIcon = availableIcons.first;
+
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog){
+            return AlertDialog(
+              title: const Text('Edit Habit'),
+              content: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    TextField(
+                      controller: titleController,
+                      decoration: const InputDecoration(labelText: 'Title'),
+                    ),
+                    TextField(
+                      keyboardType: TextInputType.number,
+                      controller: numberController,
+                    ),
+                    DropdownButton<IconData>(
+                      value: _selectedIcon ?? _habits[index].iconData,
+                      onChanged: (IconData? newValue) {
+                        selectedIcon = newValue!;
+                        setStateDialog(() => _selectedIcon = newValue);
+                        setState(() => _selectedIcon = newValue);
+                      },
+                      items: availableIcons.map<DropdownMenuItem<IconData>>((IconData value) {
+                        return DropdownMenuItem<IconData>(
+                          value: value,
+                          child: Icon(value),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: const Text('Edit'),
+                  onPressed: () {
+                    _editHabit(index, titleController.text, selectedIcon, int.parse(numberController.text));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Edited \"${_lastHabit.title}\""),
+                        action: SnackBarAction(
+                            label: "UNDO",
+                            onPressed: () => setState(() {
+                              _habits.removeAt(index);
+                              _habits.insert(index, _lastHabit);
+                            } ,)
+                        ),
+                      ),
+                    );
                     Navigator.of(context).pop();
                   },
                 ),
