@@ -66,25 +66,25 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
   void initState() {
     super.initState();
     _originalHabits.addAll([
-      Habit(title: 'Exercise', description: 'Morning workout', value: 0, iconData: Icons.fitness_center),
-      Habit(title: 'Reading', description: 'Read a book', value: 0, iconData: Icons.book),
-      Habit(title: 'Music', description: 'Play an instrument', value: 0, iconData: Icons.music_note),
-      Habit(title: 'Work', description: 'Complete tasks', value: 0, iconData: Icons.work),
+      Habit(title: 'Walk', description: 'Morning workout', value: 0, unitValue: "10" , unit : Unit.Length, iconData: Icons.fitness_center),
+      Habit(title: 'Reading', description: 'Read a book', value: 0, unitValue: "30", unit : Unit.Duration, iconData: Icons.book),
+      Habit(title: 'Music', description: 'Play an instrument', value: 0, unitValue: "15", unit : Unit.Duration, iconData: Icons.music_note),
+      Habit(title: 'Work', description: 'Complete tasks', value: 0, unitValue: "5", unit : Unit.Duration, iconData: Icons.work),
     ]);
 
     _habits.addAll(_originalHabits);
     oldHabits.addAll(_originalHabits);
   }
 
-  void _addHabit(String title, String description, String unitValue, IconData icon) {
+  void _addHabit(String title, String description, String unitValue, Unit unit, IconData icon) {
     if (title.isNotEmpty) {
       setState(() {
-        _habits.add(Habit(title: title, description: description, value: 0, unitValue: unitValue, iconData: icon));
-        oldHabits.add(Habit(title: title, description: description, value: 0, unitValue: unitValue, iconData: icon));
+        _habits.add(Habit(title: title, description: description, value: 0, unitValue: unitValue, unit : unit, iconData: icon));
+        oldHabits.add(Habit(title: title, description: description, value: 0, unitValue: unitValue, unit : unit, iconData: icon));
       });
     }
   }
-  Habit deepCopyHabit(Habit originalHabit) {
+  /*Habit deepCopyHabit(Habit originalHabit) {
     return Habit(
       title: originalHabit.title,
       description: originalHabit.description,
@@ -92,7 +92,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
       unitValue: originalHabit.unitValue,
       iconData: originalHabit.iconData
     );
-  }  
+  }  */
   void _filterSearchResults(String query) {
     List<Habit> searchResults = [];
 
@@ -154,100 +154,92 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     );
   }
 
-  Widget _buildHabitCard(Habit habit) {
-    return Expanded(
-      child: Card(
-        elevation: 4.0,
-        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        child: InkWell(
-          onTap: () {
-            print('Habit Pressed: ${habit.title}');
-            setState(() {
-              habit.value++;
-            });
-          },
-          child: Column(
-            children: [
-              ListTile(
-                leading: Icon(habit.iconData),
-                title: Text(habit.title),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Count: ${habit.value}"),
-                    Row (children: [
-                       if (habit.unitValue != null) Text("${habit.unitValue}"),
-                       if (habit.unitValue != null) Text(" ${habit.unit == Unit.Duration ? 'min' : 'km'}"),
-                      ],
-                    ),
-                  ],
-                ),
+ Widget _buildHabitCard(Habit habit) {
+  return Expanded(
+    child: Card(
+      elevation: 4.0,
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      child: InkWell(
+        onTap: () {
+          print('Habit Pressed: ${habit.title}');
+          setState(() {
+            habit.value++;
+          });
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title, unitValue, and unit on the same height
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${habit.title}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16.0, // Adjust the font size as needed
+                        ),
+                      ),
+                      if (habit.unitValue != null && habit.unitValue != "")
+                        Text("${habit.unitValue} ${habit.unit == Unit.Duration ? 'min' : 'km'}"),
+                    ],
+                  ),
+                  // Three vertical dots for details
+                  GestureDetector(
+                    onTap: () {
+                      _showDetailsPage(context, habit);
+                    },
+                    child: Icon(Icons.more_vert),
+                  ),
+                ],
               ),
-              ElevatedButton(
-                onPressed: () {
-                  _showDetailsPopup(context, habit);
-                },
-                child: Text('Details'),
-              ),
-            ],
-          ),
-
-        ),
-      ),
-    );
-  }
-
-void _showDetailsPopup(BuildContext context, Habit habit) async {
-  final RenderBox button = context.findRenderObject() as RenderBox;
-  final RenderBox overlay = Overlay.of(context)!.context.findRenderObject() as RenderBox;
-  final RelativeRect position = RelativeRect.fromRect(
-    Rect.fromPoints(
-      button.localToGlobal(Offset.zero, ancestor: overlay),
-      button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
-    ),
-    Offset.zero & overlay.size,
-  );
-
-  await showMenu(
-    context: context,
-    position: position,
-    items: [
-      PopupMenuItem(
-        child: GestureDetector(
-          onTap: () {}, // Prevent taps from being propagated to underlying widgets
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.5,
-            height: MediaQuery.of(context).size.height * 0.5,
-            padding: EdgeInsets.all(20),
-            color: Colors.blue,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Details for ${habit.title}',
-                  style: TextStyle(color: Colors.white, fontSize: 20),
-                ),
-                SizedBox(height: 20),
-                Text(
-                  'Description: ${habit.description}',
-                  style: TextStyle(color: Colors.white),
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context); // Close the popup when clicking the close button
-                  },
-                  child: Text('Close'),
-                ),
-              ],
             ),
-          ),
+            // Count, flame, and "days" text below the title and unit
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(
+                    '${habit.value}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24.0, // Adjust the font size as needed
+                    ),
+                  ),
+                  const SizedBox(width: 5.0),
+                  Icon(
+                    Icons.whatshot,
+                    color: Colors.orange,
+                  ),
+                  Text(" days"),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-    ],
-    elevation: 8.0,
+    ),
   );
 }
+
+
+void _showDetailsPage(BuildContext context, Habit habit) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => DetailsPage(habit: habit),
+    ),
+  );
+}
+
+
+ 
 
 
 
@@ -300,6 +292,8 @@ void _showDetailsPopup(BuildContext context, Habit habit) async {
                           onChanged: (Unit? newValue) {
                             setStateDialog(() {
                               selectedUnit = newValue!;
+                              // Set selectedUnit based on the selected label
+                              selectedUnit = (newValue == Unit.Duration) ? Unit.Duration : Unit.Length;
                             });
                           },
                           items: Unit.values.map<DropdownMenuItem<Unit>>((Unit value) {
@@ -308,7 +302,7 @@ void _showDetailsPopup(BuildContext context, Habit habit) async {
                               child: Text(value == Unit.Duration ? 'min' : 'km'),
                             );
                           }).toList(),
-                        ),
+                        )
                       ],
                     ),
                   ],
@@ -324,7 +318,7 @@ void _showDetailsPopup(BuildContext context, Habit habit) async {
                 TextButton(
                   child: const Text('Add'),
                   onPressed: () {
-                    _addHabit(titleController.text, "Some description", selectedValue.text, selectedIcon);
+                    _addHabit(titleController.text, "Some description", selectedValue.text, selectedUnit, selectedIcon);
                     Navigator.of(context).pop();
                   },
                 ),
@@ -337,4 +331,53 @@ void _showDetailsPopup(BuildContext context, Habit habit) async {
   }
 }
 
+class DetailsPage extends StatefulWidget {
+  final Habit habit;
 
+  const DetailsPage({required this.habit});
+
+  @override
+  State<DetailsPage> createState() => _DetailsPageState();
+}
+
+class _DetailsPageState extends State<DetailsPage> {
+
+  late TextEditingController selectedDescription;
+  Unit selectedUnit = Unit.Duration;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedDescription = TextEditingController(text: widget.habit.description);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Editing ${widget.habit.title}'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded (
+              child: TextField(
+                controller: selectedDescription,
+                decoration: const InputDecoration(labelText: 'Description: '), 
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context); // Navigate back to the home page
+              },
+              child: Text('Close'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
