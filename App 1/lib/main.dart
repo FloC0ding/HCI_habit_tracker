@@ -59,6 +59,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
   ];
   final List<Habit> _originalHabits = [];
   final List<Habit> _habits = [];
+  final List<Habit> oldHabits = [];
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -72,25 +73,35 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     ]);
 
     _habits.addAll(_originalHabits);
+    oldHabits.addAll(_originalHabits);
   }
 
   void _addHabit(String title, String description, String unitValue, IconData icon) {
     if (title.isNotEmpty) {
       setState(() {
         _habits.add(Habit(title: title, description: description, value: 0, unitValue: unitValue, iconData: icon));
+        oldHabits.add(Habit(title: title, description: description, value: 0, unitValue: unitValue, iconData: icon));
       });
     }
   }
-
+  Habit deepCopyHabit(Habit originalHabit) {
+    return Habit(
+      title: originalHabit.title,
+      description: originalHabit.description,
+      value: originalHabit.value,
+      unitValue: originalHabit.unitValue,
+      iconData: originalHabit.iconData
+    );
+  }  
   void _filterSearchResults(String query) {
     List<Habit> searchResults = [];
 
     if (query.isNotEmpty) {
-      searchResults.addAll(_originalHabits
+      searchResults.addAll(oldHabits
           .where((habit) => habit.title.toLowerCase().contains(query.toLowerCase()))
           .toList());
     } else {
-      searchResults.addAll(_originalHabits);
+      searchResults.addAll(oldHabits);
     }
 
     setState(() {
@@ -165,8 +176,8 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                   children: [
                     Text("Count: ${habit.value}"),
                     Row (children: [
-                      Text(" ${habit.unitValue}"),
-                      Text(" ${habit.unit == Unit.Duration ? 'min' : 'km'}"),
+                       if (habit.unitValue != null) Text("${habit.unitValue}"),
+                       if (habit.unitValue != null) Text(" ${habit.unit == Unit.Duration ? 'min' : 'km'}"),
                       ],
                     ),
                   ],
@@ -326,63 +337,4 @@ void _showDetailsPopup(BuildContext context, Habit habit) async {
   }
 }
 
-class HabitSearchDelegate extends SearchDelegate<Habit> {
-  final List<Habit> habits;
-  final List<Habit> originalHabits;
 
-  HabitSearchDelegate(this.habits, this.originalHabits);
-
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: const Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () {
-        // Reset _habits to the original list when the search is canceled
-        habits.clear();
-        habits.addAll(originalHabits);
-        close(context, Habit(title: 'No Selection', description: '', value: 0, iconData: Icons.error));
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    return _buildSearchResults();
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    return _buildSearchResults();
-  }
-
-  Widget _buildSearchResults() {
-    List<Habit> searchResults = habits
-        .where((habit) => habit.title.toLowerCase().contains(query.toLowerCase()))
-        .toList();
-
-    return ListView.builder(
-      itemCount: searchResults.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(searchResults[index].title),
-          onTap: () {
-            // Fix the issue by providing a single Habit object, not a list
-            close(context, searchResults[index]);
-          },
-        );
-      },
-    );
-  }
-}
