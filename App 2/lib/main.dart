@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// flutter pub add dynamic_color
+import 'package:dynamic_color/dynamic_color.dart';
 // flutter pub add flutter_slidable -> cmd in project root
 import 'package:flutter_slidable/flutter_slidable.dart';
 
@@ -11,12 +13,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Habit Tracker',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HabitTrackerPage(),
+    return DynamicColorBuilder(
+      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+        return MaterialApp(
+          title: 'Habit Tracker',
+          theme: ThemeData(
+            colorScheme: lightDynamic,
+            useMaterial3: true,
+            //primarySwatch: Colors.blue,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: darkDynamic,
+            brightness: Brightness.dark,
+            useMaterial3: true,
+          ),
+          home: const HabitTrackerPage(),
+        );
+      },
     );
   }
 }
@@ -28,7 +41,11 @@ class Habit {
   int value;
   IconData iconData;
 
-  Habit({required this.title, required this.description, required this.value, required this.iconData});
+  Habit(
+      {required this.title,
+      required this.description,
+      required this.value,
+      required this.iconData});
 }
 
 class HabitTrackerPage extends StatefulWidget {
@@ -40,7 +57,6 @@ class HabitTrackerPage extends StatefulWidget {
 
 //Main Page with the home menu and everything. Also includes the Add new habit dialog
 class _HabitTrackerPageState extends State<HabitTrackerPage> {
-
   //Variable needed to update the icon in the add new dialog, since it doesn't handle state updates in the showDialog
   IconData? _selectedIcon;
 
@@ -55,38 +71,50 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
   // List storing all the user habits
   final List<Habit> _habits = [];
   //Last Habit that was deleted, used for UNDO function
-  Habit _lastHabit = Habit(title: "no", description: "no", value: 0, iconData: Icons.book);
+  Habit _lastHabit =
+      Habit(title: "no", description: "no", value: 0, iconData: Icons.book);
   //Self-explanatory: Add a new habit to the list
   void _addHabit(String title, String description, IconData icon) {
-    if(title.isNotEmpty){
+    if (title.isNotEmpty) {
       setState(() {
-        _habits.add(Habit(title: title, description: description, value: 0, iconData: icon));
+        _habits.add(Habit(
+            title: title, description: description, value: 0, iconData: icon));
       });
     }
   }
 
   //Edits Habit at index
 
-  void _editHabit (int index, String newTitle, IconData icon, int newValue) {
+  void _editHabit(int index, String newTitle, IconData icon, int newValue) {
     setState(() {
       _lastHabit = _habits[index];
-      _habits[index] = Habit(title: newTitle, description: _habits[index].description, value: newValue, iconData: icon);
+      _habits[index] = Habit(
+          title: newTitle,
+          description: _habits[index].description,
+          value: newValue,
+          iconData: icon);
     });
   }
 
   //Deletes Habit from list
-  void _deleteHabit (int index) {
+  void _deleteHabit(int index) {
     setState(() {
-        _lastHabit = _habits[index];
-        _habits.removeAt(index);
-
+      _lastHabit = _habits[index];
+      _habits.removeAt(index);
     });
   }
-
 
   //Render the stuff in the home menu
   @override
   Widget build(BuildContext context) {
+
+    // Get the current color scheme
+    ColorScheme colorScheme = Theme.of(context).colorScheme;
+
+    //Harmonize the colors
+    Color harmonizedBlueAccent = Colors.blueAccent.harmonizeWith(colorScheme.primary);
+    Color harmonizedRedAccent = Colors.redAccent.harmonizeWith(colorScheme.primary);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Habit Tracker'),
@@ -98,32 +126,34 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
         itemBuilder: (context, index) {
           //Cards are clickable!
           return Card(
-            elevation: 4.0, //Shadow effect
-            margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-             child: Slidable(
+              elevation: 4.0, //Shadow effect
+              margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              child: Slidable(
                 // Specify a key if the Slidable is dismissible.
                 key: UniqueKey(),
                 // The end action pane is the one at the right side.
                 endActionPane: ActionPane(
                   motion: const ScrollMotion(),
-                  dismissible: DismissiblePane(
-                      onDismissed: () {_deleteHabit(index);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Deleted \"${_lastHabit.title}\""),
-                          action: SnackBarAction(
-                              label: "UNDO",
-                              onPressed: () => setState(() => _habits.insert(index, _lastHabit),)
-                          ),
-                        ),
-                      );
-
-                      }),
+                  dismissible: DismissiblePane(onDismissed: () {
+                    _deleteHabit(index);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Deleted \"${_lastHabit.title}\""),
+                        action: SnackBarAction(
+                            label: "UNDO",
+                            onPressed: () => setState(
+                                  () => _habits.insert(index, _lastHabit),
+                                )),
+                      ),
+                    );
+                  }),
                   children: [
                     SlidableAction(
-                      onPressed: (BuildContext context) { _editHabitDialog(index);
-                     },
-                      backgroundColor: const Color(0xFF0392CF),
+                      onPressed: (BuildContext context) {
+                        _editHabitDialog(index);
+                      },
+                      //backgroundColor: const Color(0xFF0392CF),
+                      backgroundColor: harmonizedBlueAccent,
                       foregroundColor: Colors.white,
                       icon: Icons.edit,
                       label: 'Edit',
@@ -136,34 +166,35 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                             content: Text("Deleted \"${_lastHabit.title}\""),
                             action: SnackBarAction(
                                 label: "UNDO",
-                                onPressed: () => setState(() => _habits.insert(index, _lastHabit),)
-                            ),
+                                onPressed: () => setState(
+                                      () => _habits.insert(index, _lastHabit),
+                                    )),
                           ),
                         );
                       },
-                      backgroundColor: const Color(0xFFFE4A49),
+                      //backgroundColor: const Color(0xFFFE4A49),
+                      backgroundColor: harmonizedRedAccent,
                       foregroundColor: Colors.white,
                       icon: Icons.delete,
                       label: 'Delete',
                     ),
                   ],
                 ),
-              child: InkWell(
-                onTap: () {
-                  // Handle the tap event
-                  print('Habit Pressed: ${_habits[index].title}');
-                  setState(() {
-                    _habits[index].value++;
-                  });
-                },
-                child: ListTile(
-                  leading: Icon(_habits[index].iconData),
-                  title: Text(_habits[index].title),
-                  subtitle: Text("Count: ${_habits[index].value}"),
+                child: InkWell(
+                  onTap: () {
+                    // Handle the tap event
+                    print('Habit Pressed: ${_habits[index].title}');
+                    setState(() {
+                      _habits[index].value++;
+                    });
+                  },
+                  child: ListTile(
+                    leading: Icon(_habits[index].iconData),
+                    title: Text(_habits[index].title),
+                    subtitle: Text("Count: ${_habits[index].value}"),
+                  ),
                 ),
-              ),
-            )
-          );
+              ));
         },
       ),
 
@@ -176,7 +207,8 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
   }
 
   //Add new Habit dialog
-  Future<void> _showAddHabitDialog() async{ //The Dialog for adding a new habit
+  Future<void> _showAddHabitDialog() async {
+    //The Dialog for adding a new habit
     TextEditingController titleController = TextEditingController();
     IconData selectedIcon = availableIcons.first;
 
@@ -185,7 +217,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (context, setStateDialog){
+          builder: (context, setStateDialog) {
             return AlertDialog(
               title: const Text('Add New Habit'),
               content: SingleChildScrollView(
@@ -202,7 +234,8 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                         setStateDialog(() => _selectedIcon = newValue);
                         setState(() => _selectedIcon = newValue);
                       },
-                      items: availableIcons.map<DropdownMenuItem<IconData>>((IconData value) {
+                      items: availableIcons
+                          .map<DropdownMenuItem<IconData>>((IconData value) {
                         return DropdownMenuItem<IconData>(
                           value: value,
                           child: Icon(value),
@@ -222,7 +255,8 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                 TextButton(
                   child: const Text('Add'),
                   onPressed: () {
-                    _addHabit(titleController.text, "Some description", selectedIcon);
+                    _addHabit(
+                        titleController.text, "Some description", selectedIcon);
                     Navigator.of(context).pop();
                   },
                 ),
@@ -234,9 +268,12 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     );
   }
 
-  Future<void> _editHabitDialog(int index) async{ //The Dialog for adding a new habit
-    TextEditingController titleController = TextEditingController(text: _habits[index].title);
-    TextEditingController numberController = TextEditingController(text: (_habits[index].value).toString());
+  Future<void> _editHabitDialog(int index) async {
+    //The Dialog for adding a new habit
+    TextEditingController titleController =
+        TextEditingController(text: _habits[index].title);
+    TextEditingController numberController =
+        TextEditingController(text: (_habits[index].value).toString());
     IconData selectedIcon = availableIcons.first;
 
     return showDialog<void>(
@@ -244,7 +281,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (context, setStateDialog){
+          builder: (context, setStateDialog) {
             return AlertDialog(
               title: const Text('Edit Habit'),
               content: SingleChildScrollView(
@@ -265,7 +302,8 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                         setStateDialog(() => _selectedIcon = newValue);
                         setState(() => _selectedIcon = newValue);
                       },
-                      items: availableIcons.map<DropdownMenuItem<IconData>>((IconData value) {
+                      items: availableIcons
+                          .map<DropdownMenuItem<IconData>>((IconData value) {
                         return DropdownMenuItem<IconData>(
                           value: value,
                           child: Icon(value),
@@ -285,17 +323,19 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                 TextButton(
                   child: const Text('Edit'),
                   onPressed: () {
-                    _editHabit(index, titleController.text, selectedIcon, int.parse(numberController.text));
+                    _editHabit(index, titleController.text, selectedIcon,
+                        int.parse(numberController.text));
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text("Edited \"${_lastHabit.title}\""),
                         action: SnackBarAction(
                             label: "UNDO",
-                            onPressed: () => setState(() {
-                              _habits.removeAt(index);
-                              _habits.insert(index, _lastHabit);
-                            } ,)
-                        ),
+                            onPressed: () => setState(
+                                  () {
+                                    _habits.removeAt(index);
+                                    _habits.insert(index, _lastHabit);
+                                  },
+                                )),
                       ),
                     );
                     Navigator.of(context).pop();
@@ -308,6 +348,4 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
       },
     );
   }
-
-
 }
