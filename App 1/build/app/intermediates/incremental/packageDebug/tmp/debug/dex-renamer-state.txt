@@ -1,4 +1,4 @@
-#Tue Nov 28 16:30:47 CET 2023
-base.0=C\:\\Users\\mwlom\\OneDrive\\Documents\\ETH\\HS23\\Human_Computer_Interaction\\HCI_habit_tracker\\App 1\\build\\app\\intermediates\\dex\\debug\\mergeDexDebug\\classes.dex
+#Wed Nov 29 20:56:27 CET 2023
+base.0=C\:\\Users\\Florian\\ETH\\HCI_habit_tracker\\App 1\\build\\app\\intermediates\\dex\\debug\\mergeDexDebug\\classes.dex
 path.0=classes.dex
 renamed.0=classes.dex

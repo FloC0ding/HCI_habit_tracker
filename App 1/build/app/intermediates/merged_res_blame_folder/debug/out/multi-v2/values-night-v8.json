@@ -4,7 +4,7 @@
             "outputFile": "ch.ethz.hci.groupnine.habit_tracker.app-mergeDebugResources-9:/values-night-v8/values-night-v8.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\mwlom\\OneDrive\\Documents\\ETH\\HS23\\Human_Computer_Interaction\\HCI_habit_tracker\\App 1\\android\\app\\src\\main\\res\\values-night\\styles.xml",
+                    "source": "C:\\Users\\Florian\\ETH\\HCI_habit_tracker\\App 1\\android\\app\\src\\main\\res\\values-night\\styles.xml",
                     "from": {
                         "startLines": "3,14",
                         "startColumns": "4,4",

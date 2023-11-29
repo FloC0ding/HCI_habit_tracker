@@ -165,7 +165,7 @@ Widget _buildHabitCard(Habit habit) {
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       child: InkWell(
         onTap: () {
-          print('Habit Pressed: ${habit.title}');
+          // print('Habit Pressed: ${habit.title}');
           setState(() {
             habit.value++;
             habit.clicked = true;
@@ -189,8 +189,8 @@ Widget _buildHabitCard(Habit habit) {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${habit.title}',
-                            style: TextStyle(
+                            habit.title,
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16.0,
                             ),
@@ -204,13 +204,13 @@ Widget _buildHabitCard(Habit habit) {
                     ],
                   ),
                   // Right side with green checkmark if habit is clicked
-                  if (habit.clicked) Icon(Icons.check, color: Colors.green),
+                  if (habit.clicked) const Icon(Icons.check, color: Colors.green),
                   // Right side with three dots if habit is not clicked
                   GestureDetector(
                     onTap: () {
                       _showDetailsPage(context, habit);
                     },
-                    child: Icon(Icons.more_vert),
+                    child: const Icon(Icons.more_vert),
                   ),
                 ],
               ),
@@ -223,17 +223,17 @@ Widget _buildHabitCard(Habit habit) {
                 children: [
                   Text(
                     '${habit.value}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 24.0,
                     ),
                   ),
                   const SizedBox(width: 5.0),
-                  Icon(
+                  const Icon(
                     Icons.whatshot,
                     color: Colors.orange,
                   ),
-                  Text(" days"),
+                  const Text(" days"),
                 ],
               ),
             ),
@@ -259,6 +259,13 @@ void updateHabit(Habit updatedHabit) {
   });
 }
 
+void deleteHabit(Habit habit) {
+    setState(() {
+      _habits.remove(habit);
+      oldHabits.remove(habit);
+    });
+  }
+
 void _showDetailsPage(BuildContext context, Habit habit) async {
   final updatedHabit = await Navigator.push(
     context,
@@ -266,6 +273,7 @@ void _showDetailsPage(BuildContext context, Habit habit) async {
       builder: (context) => DetailsPage(
         habit: habit,
         availableIcons: availableIcons,
+        deleteHabitCallback: deleteHabit,
       ),
     ),
   );
@@ -374,8 +382,13 @@ void _showDetailsPage(BuildContext context, Habit habit) async {
 class DetailsPage extends StatefulWidget {
   final Habit habit;
   final List<IconData> availableIcons;
+  final Function(Habit) deleteHabitCallback;
 
-  const DetailsPage({required this.habit, required this.availableIcons});
+  const DetailsPage({super.key, 
+    required this.habit, 
+    required this.availableIcons, 
+    required this.deleteHabitCallback,
+  });
 
   @override
   State<DetailsPage> createState() => _DetailsPageState();
@@ -412,14 +425,23 @@ class _DetailsPageState extends State<DetailsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row (
-              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 ElevatedButton(
-                  // TODO implement this shit
                   onPressed: () {
-                    Navigator.pop(context, widget.habit);
+                    widget.deleteHabitCallback(widget.habit);
+                    Navigator.pop(context);
                   },
-                  child: Text('delete habit') )
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white, 
+                    padding: EdgeInsets.symmetric(vertical: 9.0, horizontal: 16.0), // change values
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+
+                  child: const Text('delete habit') )
               ],
             ),
 
@@ -475,7 +497,7 @@ class _DetailsPageState extends State<DetailsPage> {
             ),
 
 
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
                 widget.habit.title = selectedTitle.text;
@@ -485,7 +507,7 @@ class _DetailsPageState extends State<DetailsPage> {
                 widget.habit.unit = selectedUnit;
                 Navigator.pop(context, widget.habit); // Return the updated habit
               },
-              child: Text('Save'),
+              child: const Text('Save'),
             ),
           ],
         ),
