@@ -20,7 +20,6 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             colorScheme: lightDynamic,
             useMaterial3: true,
-            //primarySwatch: Colors.blue,
           ),
           darkTheme: ThemeData(
             colorScheme: darkDynamic,
@@ -32,6 +31,16 @@ class MyApp extends StatelessWidget {
       },
     );
   }
+}
+
+// Class for the Statistics page
+class HabitStatisticsPage extends StatefulWidget{
+  final List<Habit> habits;
+
+  const HabitStatisticsPage({Key? key, required this.habits}) : super(key: key);
+
+  @override
+  _HabitStatisticsPageState createState() => _HabitStatisticsPageState();
 }
 
 //Class Defining what a Habit is
@@ -111,13 +120,22 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     // Get the current color scheme
     ColorScheme colorScheme = Theme.of(context).colorScheme;
 
-    //Harmonize the colors
-    Color harmonizedBlueAccent = Colors.blueAccent.harmonizeWith(colorScheme.primary);
-    Color harmonizedRedAccent = Colors.redAccent.harmonizeWith(colorScheme.primary);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Habit Tracker'),
+
+        //Navigation to the Statistics Page
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.bar_chart),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HabitStatisticsPage(habits: _habits)),
+              );
+            },
+          ),
+        ],
       ),
 
       //List with all the habits
@@ -153,7 +171,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                         _editHabitDialog(index);
                       },
                       //backgroundColor: const Color(0xFF0392CF),
-                      backgroundColor: harmonizedBlueAccent,
+                      backgroundColor: colorScheme.secondary,
                       foregroundColor: Colors.white,
                       icon: Icons.edit,
                       label: 'Edit',
@@ -173,7 +191,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                         );
                       },
                       //backgroundColor: const Color(0xFFFE4A49),
-                      backgroundColor: harmonizedRedAccent,
+                      backgroundColor: colorScheme.error,
                       foregroundColor: Colors.white,
                       icon: Icons.delete,
                       label: 'Delete',
@@ -348,4 +366,26 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
       },
     );
   }
+}
+
+// The Statistics Page
+// More complex statistics can be added using fl_chart or charts_flutter
+class _HabitStatisticsPageState extends State<HabitStatisticsPage> {
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Habit Statistcs"),
+      ),
+      body: ListView.builder(
+        itemCount: widget.habits.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(widget.habits[index].title),
+            trailing: Text("Count: ${widget.habits[index].value}"),
+          );
+        },
+      ),
+    );
+}
 }
