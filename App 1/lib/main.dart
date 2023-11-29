@@ -26,6 +26,7 @@ class Habit {
   String? unitValue;
   IconData iconData;
   Unit? unit; // New property
+  bool clicked;
 
   Habit({
     required this.title,
@@ -34,6 +35,7 @@ class Habit {
     required this.iconData,
     this.unitValue,
     this.unit, // Initialize to null
+    required this.clicked,
   });
 }
 
@@ -66,10 +68,10 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
   void initState() {
     super.initState();
     _originalHabits.addAll([
-      Habit(title: 'Walk', description: 'Morning workout', value: 0, unitValue: "10" , unit : Unit.Length, iconData: Icons.fitness_center),
-      Habit(title: 'Reading', description: 'Read a book', value: 0, unitValue: "30", unit : Unit.Duration, iconData: Icons.book),
-      Habit(title: 'Music', description: 'Play an instrument', value: 0, unitValue: "15", unit : Unit.Duration, iconData: Icons.music_note),
-      Habit(title: 'Work', description: 'Complete tasks', value: 0, unitValue: "5", unit : Unit.Duration, iconData: Icons.work),
+      Habit(title: 'Walk', description: 'Morning workout', value: 0, unitValue: "10" , unit : Unit.Length, iconData: Icons.fitness_center, clicked: false),
+      Habit(title: 'Reading', description: 'Read a book', value: 0, unitValue: "30", unit : Unit.Duration, iconData: Icons.book, clicked: false),
+      Habit(title: 'Music', description: 'Play an instrument', value: 0, unitValue: "15", unit : Unit.Duration, iconData: Icons.music_note, clicked: false),
+      Habit(title: 'Work', description: 'Complete tasks', value: 0, unitValue: "5", unit : Unit.Duration, iconData: Icons.work, clicked: false),
     ]);
 
     _habits.addAll(_originalHabits);
@@ -79,8 +81,8 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
   void _addHabit(String title, String description, String unitValue, Unit unit, IconData icon) {
     if (title.isNotEmpty) {
       setState(() {
-        _habits.add(Habit(title: title, description: description, value: 0, unitValue: unitValue, unit : unit, iconData: icon));
-        oldHabits.add(Habit(title: title, description: description, value: 0, unitValue: unitValue, unit : unit, iconData: icon));
+        _habits.add(Habit(title: title, description: description, value: 0, unitValue: unitValue, unit : unit, iconData: icon, clicked: false));
+        oldHabits.add(Habit(title: title, description: description, value: 0, unitValue: unitValue, unit : unit, iconData: icon, clicked: false));
       });
     }
   }
@@ -154,7 +156,9 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     );
   }
 
- Widget _buildHabitCard(Habit habit) {
+Widget _buildHabitCard(Habit habit) {
+ 
+
   return Expanded(
     child: Card(
       elevation: 4.0,
@@ -164,32 +168,44 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
           print('Habit Pressed: ${habit.title}');
           setState(() {
             habit.value++;
+            habit.clicked = true;
           });
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title, unitValue, and unit on the same height
+            // Title, icon, and unit information
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  // Left side with title and icon
+                  Row(
                     children: [
-                      Text(
-                        '${habit.title}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16.0, // Adjust the font size as needed
-                        ),
+                      Icon(habit.iconData),
+                      const SizedBox(width: 5.0),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${habit.title}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16.0,
+                            ),
+                          ),
+                          if (habit.unitValue != null &&
+                              habit.unitValue != "")
+                            Text(
+                                "${habit.unitValue} ${habit.unit == Unit.Duration ? 'min' : 'km'}"),
+                        ],
                       ),
-                      if (habit.unitValue != null && habit.unitValue != "")
-                        Text("${habit.unitValue} ${habit.unit == Unit.Duration ? 'min' : 'km'}"),
                     ],
                   ),
-                  // Three vertical dots for details
+                  // Right side with green checkmark if habit is clicked
+                  if (habit.clicked) Icon(Icons.check, color: Colors.green),
+                  // Right side with three dots if habit is not clicked
                   GestureDetector(
                     onTap: () {
                       _showDetailsPage(context, habit);
@@ -199,7 +215,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                 ],
               ),
             ),
-            // Count, flame, and "days" text below the title and unit
+            // Count, flame, and "days" text below the title and icon
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
@@ -209,7 +225,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                     '${habit.value}',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 24.0, // Adjust the font size as needed
+                      fontSize: 24.0,
                     ),
                   ),
                   const SizedBox(width: 5.0),
@@ -229,13 +245,35 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
 }
 
 
-void _showDetailsPage(BuildContext context, Habit habit) {
-  Navigator.push(
+
+void updateHabit(Habit updatedHabit) {
+  setState(() {
+    final habitIndex = _habits.indexOf(updatedHabit);
+    if (habitIndex != -1) {
+      oldHabits[habitIndex].title = updatedHabit.title;
+      oldHabits[habitIndex].description = updatedHabit.description;
+      oldHabits[habitIndex].iconData = updatedHabit.iconData;
+      oldHabits[habitIndex].value = updatedHabit.value;
+      oldHabits[habitIndex].unit = updatedHabit.unit;
+    }
+  });
+}
+
+void _showDetailsPage(BuildContext context, Habit habit) async {
+  final updatedHabit = await Navigator.push(
     context,
     MaterialPageRoute(
-      builder: (context) => DetailsPage(habit: habit),
+      builder: (context) => DetailsPage(
+        habit: habit,
+        availableIcons: availableIcons,
+      ),
     ),
   );
+
+  // Check if the habit was updated
+  if (updatedHabit != null) {
+    updateHabit(updatedHabit);
+  }
 }
 
 
@@ -331,10 +369,13 @@ void _showDetailsPage(BuildContext context, Habit habit) {
   }
 }
 
+// Details
+
 class DetailsPage extends StatefulWidget {
   final Habit habit;
+  final List<IconData> availableIcons;
 
-  const DetailsPage({required this.habit});
+  const DetailsPage({required this.habit, required this.availableIcons});
 
   @override
   State<DetailsPage> createState() => _DetailsPageState();
@@ -342,13 +383,21 @@ class DetailsPage extends StatefulWidget {
 
 class _DetailsPageState extends State<DetailsPage> {
 
+
+  late TextEditingController selectedTitle;
   late TextEditingController selectedDescription;
-  Unit selectedUnit = Unit.Duration;
+  late IconData selectedIcon;
+  late TextEditingController selectedValue;
+  late Unit? selectedUnit;
 
   @override
   void initState() {
     super.initState();
     selectedDescription = TextEditingController(text: widget.habit.description);
+    selectedTitle = TextEditingController(text: widget.habit.title);
+    selectedIcon = widget.habit.iconData;
+    selectedValue = TextEditingController(text: widget.habit.unitValue);
+    selectedUnit = widget.habit.unit;
   }
 
   @override
@@ -362,18 +411,81 @@ class _DetailsPageState extends State<DetailsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded (
-              child: TextField(
+            Row (
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                ElevatedButton(
+                  // TODO implement this shit
+                  onPressed: () {
+                    Navigator.pop(context, widget.habit);
+                  },
+                  child: Text('delete habit') )
+              ],
+            ),
+
+            TextField(
+              controller: selectedTitle,
+              decoration: const InputDecoration(labelText: 'Title: '), 
+            ),
+            TextField(
                 controller: selectedDescription,
                 decoration: const InputDecoration(labelText: 'Description: '), 
-              ),
             ),
+            DropdownButton<IconData>(
+              value: selectedIcon,
+              onChanged: (IconData? newValue) {
+                setState(() {
+                  selectedIcon = newValue!;
+                });
+              },
+              items: widget.availableIcons.map<DropdownMenuItem<IconData>>((IconData value) {
+                return DropdownMenuItem<IconData>(
+                  value: value,
+                  child: Icon(value),
+                );
+              }).toList(),
+            ),
+
+            //exact same code as in _showAddHabitDialog if changed there change here too
+            Row(
+              children: [
+                Expanded (
+                  child: TextField(
+                    controller: selectedValue,
+                    decoration: const InputDecoration(labelText: 'Amount/Duration'),
+                  ),
+                ),
+                DropdownButton<Unit>(
+                  value: selectedUnit,
+                  onChanged: (Unit? newValue) {
+                    setState(() {
+                      selectedUnit = newValue!;
+                      // Set selectedUnit based on the selected label
+                      selectedUnit = (newValue == Unit.Duration) ? Unit.Duration : Unit.Length;
+                    });
+                  },
+                  items: Unit.values.map<DropdownMenuItem<Unit>>((Unit value) {
+                    return DropdownMenuItem<Unit>(
+                      value: value,
+                      child: Text(value == Unit.Duration ? 'min' : 'km'),
+                    );
+                  }).toList(),
+                ), 
+              ],
+            ),
+
+
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context); // Navigate back to the home page
+                widget.habit.title = selectedTitle.text;
+                widget.habit.description = selectedDescription.text;
+                widget.habit.iconData = selectedIcon;
+                widget.habit.unitValue = selectedValue.text;
+                widget.habit.unit = selectedUnit;
+                Navigator.pop(context, widget.habit); // Return the updated habit
               },
-              child: Text('Close'),
+              child: Text('Save'),
             ),
           ],
         ),
@@ -381,3 +493,5 @@ class _DetailsPageState extends State<DetailsPage> {
     );
   }
 }
+
+
