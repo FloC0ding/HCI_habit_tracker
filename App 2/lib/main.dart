@@ -375,7 +375,7 @@ class _HabitStatisticsPageState extends State<HabitStatisticsPage> {
   Widget build(BuildContext context){
     return Scaffold(
       appBar: AppBar(
-        title: Text("Habit Statistcs"),
+        title: Text("Habit Statistics"),
       ),
       body: ListView.builder(
         itemCount: widget.habits.length,
