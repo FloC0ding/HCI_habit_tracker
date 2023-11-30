@@ -89,7 +89,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
         clicked: false,
         num_iterations: 0,
         limit_iterations: 10,
-        timeUnit: "day",
+        timeUnit: "month",
         color: getRandomPastelColor(),
         flameColor: getRandomPastelColor2(),
       ),
@@ -102,7 +102,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
         iconData: Icons.book,
         clicked: false,
         num_iterations: 0,
-        limit_iterations: 10,
+        limit_iterations: 8,
         timeUnit: "week",
         color: getRandomPastelColor(),
         flameColor: getRandomPastelColor2(),
@@ -111,7 +111,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
         title: 'Music',
         description: 'Play an instrument',
         value: 0,
-        unitValue: "15",
+        unitValue: "40",
         unit: Unit.Duration,
         iconData: Icons.music_note,
         clicked: false,
@@ -125,13 +125,13 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
         title: 'Work',
         description: 'Complete tasks',
         value: 0,
-        unitValue: "5",
+        unitValue: "60",
         unit: Unit.Duration,
         iconData: Icons.work,
         clicked: false,
         num_iterations: 0,
-        limit_iterations: 10,
-        timeUnit: "week",
+        limit_iterations: 6,
+        timeUnit: "day",
         color: getRandomPastelColor(),
         flameColor: getRandomPastelColor2(),
       ),
@@ -392,20 +392,26 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      '${habit.value}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 24.0,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${habit.value}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24.0,
+                          ),
+                        ),
+                        const SizedBox(width: 5.0),
+                        Icon(
+                          Icons.whatshot,
+                          color: habit.flameColor,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 5.0),
-                    Icon(
-                      Icons.whatshot,
-                      color: habit.flameColor,
-                    ),
+
                     //adding the new limit_iterations and iterations
                     Text(
                       '${habit.num_iterations} / ${habit.limit_iterations} per ${habit.timeUnit}',
@@ -652,27 +658,6 @@ class _DetailsPageState extends State<DetailsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ElevatedButton(
-                    onPressed: () {
-                      widget.deleteHabitCallback(widget.habit);
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(
-                          vertical: 9.0, horizontal: 16.0), // change values
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                    ),
-                    child: const Text('delete habit'))
-              ],
-            ),
-
             TextField(
               controller: selectedTitle,
               decoration: const InputDecoration(labelText: 'Title: '),
@@ -707,25 +692,41 @@ class _DetailsPageState extends State<DetailsPage> {
                   const InputDecoration(labelText: 'Current Progress: '),
             ),
 
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                widget.habit.title = selectedTitle.text;
-                widget.habit.description = selectedDescription.text;
-                widget.habit.iconData = selectedIcon;
-                widget.habit.unitValue = selectedValue.text;
-                widget.habit.unit = selectedUnit;
-                widget.habit.num_iterations = int.tryParse(maxValue.text) ??
-                    0; //could be changed that if value is increased compared to before that a pop-up will appear
-                widget.habit.value = (widget.habit.num_iterations /
-                        widget.habit.limit_iterations)
-                    .floor();
-                widget.habit.num_iterations =
-                    widget.habit.num_iterations % widget.habit.limit_iterations;
-                Navigator.pop(
-                    context, widget.habit); // Return the updated habit
-              },
-              child: const Text('Save'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                    onPressed: () {
+                      widget.deleteHabitCallback(widget.habit);
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(
+                          vertical: 9.0, horizontal: 16.0), // change values
+                    ),
+                    child: const Text('delete habit')),
+                ElevatedButton(
+                  onPressed: () {
+                    widget.habit.title = selectedTitle.text;
+                    widget.habit.description = selectedDescription.text;
+                    widget.habit.iconData = selectedIcon;
+                    widget.habit.unitValue = selectedValue.text;
+                    widget.habit.unit = selectedUnit;
+                    widget.habit.num_iterations = int.tryParse(maxValue.text) ??
+                        0; //could be changed that if value is increased compared to before that a pop-up will appear
+                    widget.habit.value = (widget.habit.num_iterations /
+                            widget.habit.limit_iterations)
+                        .floor();
+                    widget.habit.num_iterations = widget.habit.num_iterations %
+                        widget.habit.limit_iterations;
+                    Navigator.pop(
+                        context, widget.habit); // Return the updated habit
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
             ),
           ],
         ),
