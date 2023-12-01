@@ -138,6 +138,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     ]);
 
     _habits.addAll(_originalHabits);
+
     oldHabits.addAll(_originalHabits);
   }
 
@@ -271,34 +272,82 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Habit Tracker'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Padding(
+          padding: const EdgeInsets.only(
+              top: 30, bottom: 10), // Adjust top and bottom padding
+          child: Text(
+            'Habits',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 30.0,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'SFProDisplay',
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
-          TextField(
-            controller: _searchController,
-            onChanged: (value) {
-              _filterSearchResults(value);
-            },
-            decoration: const InputDecoration(
-              labelText: 'Search',
-              hintText: 'Search habits...',
-              prefixIcon: Icon(Icons.search),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                vertical: 10, horizontal: 16), // Adjust vertical padding
+            child: Container(
+              width: 370.0,
+              height: 35,
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) {
+                  _filterSearchResults(value);
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search habits...',
+                  alignLabelWithHint: true,
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Colors.grey,
+                  ),
+                  filled: true,
+                  fillColor: const Color.fromARGB(255, 229, 229, 229),
+                  contentPadding:
+                      EdgeInsets.symmetric(vertical: 0.0, horizontal: 12.0),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                    borderSide: BorderSide.none,
+                  ),
+                  // Other customization properties
+                ),
+              ),
             ),
           ),
+          SizedBox(height: 7), // Add space between search bar and habit cards
           Expanded(
             child: ListView.builder(
               itemCount: (_habits.length / 2).ceil(),
               itemBuilder: (context, index) {
                 int leftIndex = index * 2;
                 int rightIndex = (index * 2) + 1;
-                return Row(
-                  children: [
-                    if (leftIndex < _habits.length)
-                      _buildHabitCard(_habits[leftIndex]),
-                    if (rightIndex < _habits.length)
-                      _buildHabitCard(_habits[rightIndex]),
-                  ],
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0,
+                      vertical: 4), // Adjust the horizontal padding
+                  child: Row(
+                    children: [
+                      if (leftIndex < _habits.length)
+                        _buildHabitCard(_habits[leftIndex]),
+                      if (rightIndex < _habits.length)
+                        _buildHabitCard(_habits[rightIndex]),
+                    ],
+                  ),
                 );
               },
             ),
@@ -651,7 +700,31 @@ class _DetailsPageState extends State<DetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Editing ${widget.habit.title}'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back,
+              color: Colors.black), // Set the color to black
+          onPressed: () {
+            Navigator.pop(context); // Add the navigation action you need
+          },
+        ),
+        title: Padding(
+          padding: const EdgeInsets.only(
+            top: 3,
+            bottom: 0,
+            left: 2.0, // Add left padding to separate the arrow icon
+          ),
+          child: Text(
+            ('Editing ${widget.habit.title}'),
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 20.0,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'SFProDisplay',
+            ),
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
