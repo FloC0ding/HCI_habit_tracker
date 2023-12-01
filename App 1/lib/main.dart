@@ -69,6 +69,8 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     Icons.book,
     Icons.music_note,
     Icons.work,
+    Icons.sports_baseball,
+    Icons.water_drop,
   ];
   final List<Habit> _originalHabits = [];
   final List<Habit> _habits = [];
@@ -89,7 +91,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
         clicked: false,
         num_iterations: 0,
         limit_iterations: 10,
-        timeUnit: "month",
+        timeUnit: "day",
         color: getRandomPastelColor(),
         flameColor: getRandomPastelColor2(),
       ),
@@ -102,7 +104,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
         iconData: Icons.book,
         clicked: false,
         num_iterations: 0,
-        limit_iterations: 8,
+        limit_iterations: 10,
         timeUnit: "week",
         color: getRandomPastelColor(),
         flameColor: getRandomPastelColor2(),
@@ -111,7 +113,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
         title: 'Music',
         description: 'Play an instrument',
         value: 0,
-        unitValue: "40",
+        unitValue: "15",
         unit: Unit.Duration,
         iconData: Icons.music_note,
         clicked: false,
@@ -125,13 +127,13 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
         title: 'Work',
         description: 'Complete tasks',
         value: 0,
-        unitValue: "60",
+        unitValue: "5",
         unit: Unit.Duration,
         iconData: Icons.work,
         clicked: false,
         num_iterations: 0,
-        limit_iterations: 6,
-        timeUnit: "day",
+        limit_iterations: 10,
+        timeUnit: "week",
         color: getRandomPastelColor(),
         flameColor: getRandomPastelColor2(),
       ),
@@ -683,6 +685,7 @@ class _DetailsPageState extends State<DetailsPage> {
   late TextEditingController selectedValue;
   late Unit? selectedUnit;
   late TextEditingController maxValue;
+  late TextEditingController maxStreak;
 
   @override
   void initState() {
@@ -694,6 +697,7 @@ class _DetailsPageState extends State<DetailsPage> {
     selectedUnit = widget.habit.unit;
     maxValue =
         TextEditingController(text: (widget.habit.num_iterations).toString());
+    maxStreak = TextEditingController(text: (widget.habit.value).toString());
   }
 
   @override
@@ -764,6 +768,11 @@ class _DetailsPageState extends State<DetailsPage> {
               decoration:
                   const InputDecoration(labelText: 'Current Progress: '),
             ),
+            TextField(
+              controller: maxStreak,
+              decoration:
+                  const InputDecoration(labelText: 'Current Streak: '),
+            ),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -789,9 +798,8 @@ class _DetailsPageState extends State<DetailsPage> {
                     widget.habit.unit = selectedUnit;
                     widget.habit.num_iterations = int.tryParse(maxValue.text) ??
                         0; //could be changed that if value is increased compared to before that a pop-up will appear
-                    widget.habit.value = (widget.habit.num_iterations /
-                            widget.habit.limit_iterations)
-                        .floor();
+                    widget.habit.value = int.tryParse(maxStreak.text) ??
+                        0;
                     widget.habit.num_iterations = widget.habit.num_iterations %
                         widget.habit.limit_iterations;
                     Navigator.pop(
