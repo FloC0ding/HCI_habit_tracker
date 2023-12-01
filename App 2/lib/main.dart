@@ -47,15 +47,26 @@ class HabitStatisticsPage extends StatefulWidget{
 class Habit {
   String title;
   String description;
-  int value;
+  double value;
   IconData iconData;
+  String unit;
+  double requiredValue;
+  String timeUnit;
+  double requiredTime;
+  int streak;
 
   Habit(
       {required this.title,
       required this.description,
       required this.value,
-      required this.iconData});
+      required this.iconData,
+      required this.unit,
+      required this.requiredValue,
+      required this.timeUnit,
+      required this.requiredTime,
+      required this.streak});
 }
+
 
 class HabitTrackerPage extends StatefulWidget {
   const HabitTrackerPage({super.key});
@@ -81,27 +92,32 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
   final List<Habit> _habits = [];
   //Last Habit that was deleted, used for UNDO function
   Habit _lastHabit =
-      Habit(title: "no", description: "no", value: 0, iconData: Icons.book);
+      Habit(title: "no", description: "no", value: 0, iconData: Icons.book, requiredValue: 1, unit: "", requiredTime: 1, timeUnit: "", streak: 0);
   //Self-explanatory: Add a new habit to the list
-  void _addHabit(String title, String description, IconData icon) {
+  void _addHabit(String title, String description, IconData icon, String unit, double requiredValue, String timeUnit, double requiredTime) {
     if (title.isNotEmpty) {
       setState(() {
         _habits.add(Habit(
-            title: title, description: description, value: 0, iconData: icon));
+            title: title, description: description, value: 0, iconData: icon, requiredValue: requiredValue, unit: unit, requiredTime: requiredTime, timeUnit: timeUnit, streak: 0));
       });
     }
   }
 
   //Edits Habit at index
 
-  void _editHabit(int index, String newTitle, IconData icon, int newValue) {
+  void _editHabit(int index, String newTitle, IconData icon, double newValue, String unit, double requiredValue, String timeUnit, double requiredTime, int streak) {
     setState(() {
       _lastHabit = _habits[index];
       _habits[index] = Habit(
           title: newTitle,
           description: _habits[index].description,
           value: newValue,
-          iconData: icon);
+          iconData: icon,
+          unit: unit,
+          requiredValue: requiredValue,
+          requiredTime: requiredTime,
+          timeUnit: timeUnit,
+          streak: streak);
     });
   }
 
@@ -203,13 +219,39 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                     // Handle the tap event
                     print('Habit Pressed: ${_habits[index].title}');
                     setState(() {
-                      _habits[index].value++;
+                      if(_habits[index].unit == "times") {
+                        _habits[index].value++;
+                        if(_habits[index].value >= _habits[index].requiredValue){
+                          _editHabit(index, _habits[index].title, _habits[index].iconData,
+                              _habits[index].value - _habits[index].requiredValue, _habits[index].unit, _habits[index].requiredValue, _habits[index].timeUnit, _habits[index].requiredTime, _habits[index].streak + 1);
+                        }
+                      } else{
+                        _showSetAmountDialog(index);
+                      }
                     });
                   },
                   child: ListTile(
                     leading: Icon(_habits[index].iconData),
                     title: Text(_habits[index].title),
-                    subtitle: Text("Count: ${_habits[index].value}"),
+                    subtitle: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("${_habits[index].value.toStringAsFixed(1)} / ${_habits[index].requiredValue.toStringAsFixed(1)} ${_habits[index].unit} every ${_habits[index].requiredTime.toStringAsFixed(1)} ${_habits[index].timeUnit}"),
+                        Row(
+                          children: [
+                            Text(
+                              "${_habits[index].streak}",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold
+                              ),
+                            ),
+                            Icon(Icons.whatshot, color: colorScheme.tertiary,),
+                          ],
+                        ),
+                      ],
+                    ),
+                    //Text("${_habits[index].value} / ${_habits[index].requiredValue} ${_habits[index].unit}"),
+
                   ),
                 ),
               ));
@@ -229,6 +271,10 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     //The Dialog for adding a new habit
     TextEditingController titleController = TextEditingController();
     IconData selectedIcon = availableIcons.first;
+    TextEditingController requiredController = TextEditingController();
+    TextEditingController timeController = TextEditingController();
+    String selectedTimeUnit = "days";
+    String selectedUnit = "times";
 
     return showDialog<void>(
       context: context,
@@ -260,6 +306,64 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                         );
                       }).toList(),
                     ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: timeController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: "Complete every"
+                            ),
+                          ),
+                        ),
+                        DropdownButton<String>(
+                          value: selectedTimeUnit,
+                          onChanged: (String? newValue){
+                            setStateDialog(() {
+                              selectedTimeUnit = newValue!;
+                            });
+                          },
+                          items: [
+                            "days", "weeks", "months"
+                          ].map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: requiredController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                                labelText: "Amount"
+                            ),
+                          ),
+                        ),
+                        DropdownButton<String>(
+                          value: selectedUnit,
+                          onChanged: (String? newValue){
+                            setStateDialog(() {
+                              selectedUnit = newValue!;
+                            });
+                          },
+                          items: [
+                            "times", "km", "min"
+                          ].map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -274,7 +378,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                   child: const Text('Add'),
                   onPressed: () {
                     _addHabit(
-                        titleController.text, "Some description", selectedIcon);
+                        titleController.text, "Some description", selectedIcon, selectedUnit, double.parse(requiredController.text), selectedTimeUnit, double.parse(timeController.text));
                     Navigator.of(context).pop();
                   },
                 ),
@@ -293,6 +397,11 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     TextEditingController numberController =
         TextEditingController(text: (_habits[index].value).toString());
     IconData selectedIcon = availableIcons.first;
+    TextEditingController requiredController = TextEditingController(text: (_habits[index].requiredValue.toString()));
+    TextEditingController timeController = TextEditingController(text: (_habits[index].requiredTime.toString()));
+    String selectedUnit = _habits[index].unit;
+    String selectedTimeUnit = _habits[index].timeUnit;
+    TextEditingController streakController = TextEditingController(text: (_habits[index].streak.toString()));
 
     return showDialog<void>(
       context: context,
@@ -313,6 +422,10 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                       keyboardType: TextInputType.number,
                       controller: numberController,
                     ),
+                    TextField(
+                      keyboardType: TextInputType.number,
+                      controller: streakController,
+                    ),
                     DropdownButton<IconData>(
                       value: _selectedIcon ?? _habits[index].iconData,
                       onChanged: (IconData? newValue) {
@@ -328,6 +441,58 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                         );
                       }).toList(),
                     ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: timeController,
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        DropdownButton<String>(
+                          value: selectedTimeUnit,
+                          onChanged: (String? newValue){
+                            setStateDialog(() {
+                              selectedTimeUnit = newValue!;
+                            });
+                          },
+                          items: [
+                            "days", "weeks", "months"
+                          ].map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: requiredController,
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        DropdownButton<String>(
+                          value: selectedUnit,
+                          onChanged: (String? newValue){
+                            setStateDialog(() {
+                              selectedUnit = newValue!;
+                            });
+                          },
+                          items: [
+                            "times", "km", "min"
+                          ].map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -342,7 +507,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                   child: const Text('Edit'),
                   onPressed: () {
                     _editHabit(index, titleController.text, selectedIcon,
-                        int.parse(numberController.text));
+                        double.parse(numberController.text), selectedUnit, double.parse(requiredController.text), selectedTimeUnit, double.parse(timeController.text), int.parse(streakController.text));
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text("Edited \"${_lastHabit.title}\""),
@@ -366,6 +531,71 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
       },
     );
   }
+
+  Future<void> _showSetAmountDialog(int index) async {
+    TextEditingController amountController = TextEditingController();
+
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text('Record Habit'),
+              content: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    TextField(
+                      keyboardType: TextInputType.number,
+                      controller: amountController,
+                    ),
+                    Text("${_habits[index].unit}"),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: const Text('Add'),
+                  onPressed: () {
+                    if(double.parse(amountController.text) + _habits[index].value >= _habits[index].requiredValue){
+                      _editHabit(index, _habits[index].title, _habits[index].iconData,
+                          double.parse(amountController.text) + _habits[index].value - _habits[index].requiredValue, _habits[index].unit, _habits[index].requiredValue, _habits[index].timeUnit, _habits[index].requiredTime, _habits[index].streak + 1);
+                    }else{
+                      _editHabit(index, _habits[index].title, _habits[index].iconData,
+                        double.parse(amountController.text) + _habits[index].value, _habits[index].unit, _habits[index].requiredValue, _habits[index].timeUnit, _habits[index].requiredTime, _habits[index].streak);
+                    }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Recorded \"${_lastHabit.title}\""),
+                        action: SnackBarAction(
+                            label: "UNDO",
+                            onPressed: () => setState(
+                                  () {
+                                _habits.removeAt(index);
+                                _habits.insert(index, _lastHabit);
+                              },
+                            )),
+                      ),
+                    );
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+
 }
 
 // The Statistics Page
