@@ -79,7 +79,7 @@ class HabitTrackerPage extends StatefulWidget {
 class _HabitTrackerPageState extends State<HabitTrackerPage> {
   //Variable needed to update the icon in the add new dialog, since it doesn't handle state updates in the showDialog
   IconData? _selectedIcon;
-
+  final TextEditingController _searchController = TextEditingController();
   //Define the list of available icons to choose from
   final List<IconData> availableIcons = [
     Icons.fitness_center,
@@ -90,6 +90,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
   ];
   // List storing all the user habits
   final List<Habit> _habits = [];
+  final List<Habit> _filteredhabits = [];
   //Last Habit that was deleted, used for UNDO function
   Habit _lastHabit =
       Habit(title: "no", description: "no", value: 0, iconData: Icons.book, requiredValue: 1, unit: "", requiredTime: 1, timeUnit: "", streak: 0);
@@ -98,6 +99,8 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     if (title.isNotEmpty) {
       setState(() {
         _habits.add(Habit(
+            title: title, description: description, value: 0, iconData: icon, requiredValue: requiredValue, unit: unit, requiredTime: requiredTime, timeUnit: timeUnit, streak: 0));
+        _filteredhabits.add(Habit(
             title: title, description: description, value: 0, iconData: icon, requiredValue: requiredValue, unit: unit, requiredTime: requiredTime, timeUnit: timeUnit, streak: 0));
       });
     }
@@ -136,6 +139,26 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     // Get the current color scheme
     ColorScheme colorScheme = Theme.of(context).colorScheme;
 
+    void _filterSearchResults(String query) {
+      List<Habit> searchResults = [];
+
+      if (query.isNotEmpty) {
+        searchResults.addAll(_filteredhabits
+            .where((habit) =>
+            habit.title.toLowerCase().contains(query.toLowerCase()))
+            .toList());
+      } else {
+        searchResults.addAll(_filteredhabits);
+      }
+
+      setState(() {
+        _habits.clear();
+        _habits.addAll(searchResults);
+      });
+    }
+
+
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Habit Tracker'),
@@ -155,7 +178,49 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
       ),
 
       //List with all the habits
-      body: ListView.builder(
+      body:
+      Column(
+      children: [Padding(
+      padding: const EdgeInsets.symmetric(
+          vertical: 10, horizontal: 16), // Adjust vertical padding
+      child: Container(
+        width: 370.0,
+        height: 35,
+        child: TextField(
+          controller: _searchController,
+          onChanged: (value) {
+            _filterSearchResults(value);
+          },
+          decoration: InputDecoration(
+            hintText: 'Search habits...',
+            alignLabelWithHint: true,
+            prefixIcon: Icon(
+              Icons.search,
+              color: Colors.grey,
+            ),
+            filled: true,
+            fillColor: const Color.fromARGB(255, 229, 229, 229),
+            contentPadding:
+            EdgeInsets.symmetric(vertical: 0.0, horizontal: 12.0),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+              borderSide: BorderSide.none,
+            ),
+            // Other customization properties
+          ),
+        ),
+      ),
+    ),SizedBox(height: 7),
+    Expanded(
+    child: ListView.builder(
         itemCount: _habits.length,
         itemBuilder: (context, index) {
           //Cards are clickable!
@@ -257,7 +322,9 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
               ));
         },
       ),
-
+    ),
+      ],
+      ),
       //Add new Habit button
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddHabitDialog,
