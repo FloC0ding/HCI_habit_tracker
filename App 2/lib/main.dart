@@ -80,7 +80,12 @@ class HabitTrackerPage extends StatefulWidget {
 }
 
 //Main Page with the home menu and everything. Also includes the Add new habit dialog
-class _HabitTrackerPageState extends State<HabitTrackerPage> {
+class _HabitTrackerPageState extends State<HabitTrackerPage>
+    with SingleTickerProviderStateMixin {
+  //Animation COntroller to show the user on app statup that the tiles are slidable
+  late AnimationController _slideAnimationController;
+  late Animation<Offset> _offsetSlideAnimation;
+
   //Variable needed to update the icon in the add new dialog, since it doesn't handle state updates in the showDialog
   IconData? _selectedIcon;
   final TextEditingController _searchController = TextEditingController();
@@ -101,6 +106,8 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
   @override
   void initState() {
     super.initState();
+
+    //Add the default habits
     _habits.addAll([
       Habit(
         title: "Go Running",
@@ -155,98 +162,37 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
         flameColor: getRandomFlameColor(),
       ),
     ]);
-
     _filteredhabits.addAll(_habits);
+
+    //Init the animation controller
+    _slideAnimationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 1500),
+    );
+
+    _offsetSlideAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(-0.25, 0.0),
+    ).animate(CurvedAnimation(
+      parent: _slideAnimationController,
+      curve: Curves.bounceIn,
+    ));
+
+    //Start Animation when widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _slideAnimationController.forward().then((_) {
+        _slideAnimationController.reverse();
+      });
+    });
   }
 
-  /*
-  final List<Habit> _habits = [
-    Habit(
-        title: "Go Running",
-        description: "Go Running",
-        value: 0,
-        iconData: Icons.directions_run,
-        unit: "km",
-        requiredValue: 13.37,
-        timeUnit: "days",
-        requiredTime: 2,
-        streak: 0,
-        primaryColor: getRandomPastelColor(),
-        flameColor: getRandomFlameColor()),
-    Habit(
-        title: "Sing",
-        description: "Sing",
-        value: 0,
-        iconData: Icons.music_note,
-        unit: "times",
-        requiredValue: 12,
-        timeUnit: "months",
-        requiredTime: 1,
-        streak: 0),
-    Habit(
-        title: "Go to Work",
-        description: "Go to Work",
-        value: 0,
-        iconData: Icons.work,
-        unit: "times",
-        requiredValue: 5,
-        timeUnit: "weeks",
-        requiredTime: 1,
-        streak: 0),
-    Habit(
-        title: "Read",
-        description: "Read",
-        value: 0,
-        iconData: Icons.book,
-        unit: "min",
-        requiredValue: 45,
-        timeUnit: "days",
-        requiredTime: 1,
-        streak: 0),
-  ];
-  final List<Habit> _filteredhabits = [
-    Habit(
-        title: "Go Running",
-        description: "Go Running",
-        value: 0,
-        iconData: Icons.directions_run,
-        unit: "km",
-        requiredValue: 13.37,
-        timeUnit: "days",
-        requiredTime: 2,
-        streak: 0),
-    Habit(
-        title: "Play Instrument",
-        description: "Play Instrument",
-        value: 0,
-        iconData: Icons.music_note,
-        unit: "times",
-        requiredValue: 12,
-        timeUnit: "months",
-        requiredTime: 1,
-        streak: 0),
-    Habit(
-        title: "Go to Work",
-        description: "Go to Work",
-        value: 0,
-        iconData: Icons.work,
-        unit: "times",
-        requiredValue: 5,
-        timeUnit: "weeks",
-        requiredTime: 1,
-        streak: 0),
-    Habit(
-        title: "Read",
-        description: "Read",
-        value: 0,
-        iconData: Icons.work,
-        unit: "min",
-        requiredValue: 45,
-        timeUnit: "days",
-        requiredTime: 1,
-        streak: 0),
-  ];
-*/
+  //Dispose of animationcontroller to avoid memmory leaks
+  @override
+  void dispose() {
+    _slideAnimationController.dispose();
+    super.dispose();
+  }
+
   List<Color> colors = [
     Color(0xFFFFF9C4), // Light Yellow
     Color(0xFFFFE0B2), // Light Orange
@@ -469,116 +415,125 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                     elevation: 4.0, //Shadow effect
                     margin:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    child: Slidable(
-                      // Specify a key if the Slidable is dismissible.
-                      key: UniqueKey(),
-                      // The end action pane is the one at the right side.
-                      endActionPane: ActionPane(
-                        motion: const ScrollMotion(),
-                        dismissible: DismissiblePane(onDismissed: () {
-                          _deleteHabit(index);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("Deleted \"${_lastHabit.title}\""),
-                              action: SnackBarAction(
-                                  label: "UNDO",
-                                  onPressed: () => setState(
-                                        () => _habits.insert(index, _lastHabit),
-                                      )),
-                            ),
-                          );
-                        }),
-                        children: [
-                          SlidableAction(
-                            onPressed: (BuildContext context) {
-                              _editHabitDialog(index);
-                            },
-                            //backgroundColor: const Color(0xFF0392CF),
-                            backgroundColor: colorScheme.secondary,
-                            foregroundColor: Colors.white,
-                            icon: Icons.edit,
-                            label: 'Edit',
-                          ),
-                          SlidableAction(
-                            onPressed: (context) {
+                    child:SlideTransition(
+                      position: _offsetSlideAnimation,
+                        child: Slidable(
+
+                          // Specify a key if the Slidable is dismissible.
+                          key: UniqueKey(),
+                          // The end action pane is the one at the right side.
+                          endActionPane: ActionPane(
+                            motion: const ScrollMotion(),
+                            dismissible: DismissiblePane(onDismissed: () {
                               _deleteHabit(index);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content:
-                                      Text("Deleted \"${_lastHabit.title}\""),
+                                  content: Text("Deleted \"${_lastHabit.title}\""),
                                   action: SnackBarAction(
                                       label: "UNDO",
                                       onPressed: () => setState(
-                                            () => _habits.insert(
-                                                index, _lastHabit),
-                                          )),
+                                            () => _habits.insert(index, _lastHabit),
+                                      )),
                                 ),
                               );
-                            },
-                            //backgroundColor: const Color(0xFFFE4A49),
-                            backgroundColor: colorScheme.error,
-                            foregroundColor: Colors.white,
-                            icon: Icons.delete,
-                            label: 'Delete',
-                          ),
-                        ],
-                      ),
-                      child: InkWell(
-                        onTap: () {
-                          // Handle the tap event
-                          print('Habit Pressed: ${_habits[index].title}');
-                          setState(() {
-                            if (_habits[index].unit == "times") {
-                              _habits[index].value++;
-                              if (_habits[index].value >=
-                                  _habits[index].requiredValue) {
-                                _editHabit(
-                                    index,
-                                    _habits[index].title,
-                                    _habits[index].iconData,
-                                    _habits[index].value -
-                                        _habits[index].requiredValue,
-                                    _habits[index].unit,
-                                    _habits[index].requiredValue,
-                                    _habits[index].timeUnit,
-                                    _habits[index].requiredTime,
-                                    _habits[index].streak + 1,
-                                    _habits[index].primaryColor,
-                                    _habits[index].flameColor);
-                              }
-                            } else {
-                              _showSetAmountDialog(index);
-                            }
-                          });
-                        },
-                        child: ListTile(
-                          tileColor: _habits[index].primaryColor.harmonizeWith(colorScheme.primary),
-                          leading: Icon(_habits[index].iconData),
-                          title: Text(_habits[index].title),
-                          subtitle: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            }),
                             children: [
-                              Text(
-                                  "${_habits[index].value == _habits[index].value.toInt() ? _habits[index].value.toInt() : _habits[index].value.toStringAsFixed(1)} / ${_habits[index].requiredValue == _habits[index].requiredValue.toInt() ? _habits[index].requiredValue.toInt() : _habits[index].requiredValue.toStringAsFixed(1)} ${_habits[index].unit == "times" && _habits[index].requiredValue == 1 ? "time" : _habits[index].unit} every ${_habits[index].requiredTime == 1 ? "" : (_habits[index].requiredTime == _habits[index].requiredTime.toInt() ? _habits[index].requiredTime.toInt() : _habits[index].requiredTime.toStringAsFixed(1))} ${_habits[index].requiredTime == 1 && _habits[index].timeUnit.isNotEmpty ? _habits[index].timeUnit.substring(0, _habits[index].timeUnit.length - 1) : _habits[index].timeUnit}"),
-                              Row(
-                                children: [
-                                  Text(
-                                    "${_habits[index].streak}",
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  Icon(
-                                    Icons.whatshot,
-                                    color: _habits[index].flameColor.harmonizeWith(colorScheme.primary),
-                                  ),
-                                ],
+                              SlidableAction(
+                                onPressed: (BuildContext context) {
+                                  _editHabitDialog(index);
+                                },
+                                //backgroundColor: const Color(0xFF0392CF),
+                                backgroundColor: colorScheme.secondary,
+                                foregroundColor: Colors.white,
+                                icon: Icons.edit,
+                                label: 'Edit',
+                              ),
+                              SlidableAction(
+                                onPressed: (context) {
+                                  _deleteHabit(index);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content:
+                                      Text("Deleted \"${_lastHabit.title}\""),
+                                      action: SnackBarAction(
+                                          label: "UNDO",
+                                          onPressed: () => setState(
+                                                () => _habits.insert(
+                                                index, _lastHabit),
+                                          )),
+                                    ),
+                                  );
+                                },
+                                //backgroundColor: const Color(0xFFFE4A49),
+                                backgroundColor: colorScheme.error,
+                                foregroundColor: Colors.white,
+                                icon: Icons.delete,
+                                label: 'Delete',
                               ),
                             ],
                           ),
-                          //Text("${_habits[index].value} / ${_habits[index].requiredValue} ${_habits[index].unit}"),
+                          child: InkWell(
+                            onTap: () {
+                              // Handle the tap event
+                              print('Habit Pressed: ${_habits[index].title}');
+                              setState(() {
+                                if (_habits[index].unit == "times") {
+                                  _habits[index].value++;
+                                  if (_habits[index].value >=
+                                      _habits[index].requiredValue) {
+                                    _editHabit(
+                                        index,
+                                        _habits[index].title,
+                                        _habits[index].iconData,
+                                        _habits[index].value -
+                                            _habits[index].requiredValue,
+                                        _habits[index].unit,
+                                        _habits[index].requiredValue,
+                                        _habits[index].timeUnit,
+                                        _habits[index].requiredTime,
+                                        _habits[index].streak + 1,
+                                        _habits[index].primaryColor,
+                                        _habits[index].flameColor);
+                                  }
+                                } else {
+                                  _showSetAmountDialog(index);
+                                }
+                              });
+                            },
+                            child: ListTile(
+                              tileColor: _habits[index]
+                                  .primaryColor
+                                  .harmonizeWith(colorScheme.primary),
+                              leading: Icon(_habits[index].iconData),
+                              title: Text(_habits[index].title),
+                              subtitle: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                      "${_habits[index].value == _habits[index].value.toInt() ? _habits[index].value.toInt() : _habits[index].value.toStringAsFixed(1)} / ${_habits[index].requiredValue == _habits[index].requiredValue.toInt() ? _habits[index].requiredValue.toInt() : _habits[index].requiredValue.toStringAsFixed(1)} ${_habits[index].unit == "times" && _habits[index].requiredValue == 1 ? "time" : _habits[index].unit} every ${_habits[index].requiredTime == 1 ? "" : (_habits[index].requiredTime == _habits[index].requiredTime.toInt() ? _habits[index].requiredTime.toInt() : _habits[index].requiredTime.toStringAsFixed(1))} ${_habits[index].requiredTime == 1 && _habits[index].timeUnit.isNotEmpty ? _habits[index].timeUnit.substring(0, _habits[index].timeUnit.length - 1) : _habits[index].timeUnit}"),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        "${_habits[index].streak}",
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      Icon(
+                                        Icons.whatshot,
+                                        color: _habits[index]
+                                            .flameColor
+                                            .harmonizeWith(colorScheme.primary),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              //Text("${_habits[index].value} / ${_habits[index].requiredValue} ${_habits[index].unit}"),
+                            ),
+                          ),
                         ),
-                      ),
-                    ));
+                    ),
+                    );
               },
             ),
           ),
