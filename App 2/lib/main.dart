@@ -503,7 +503,12 @@ class _HabitTrackerPageState extends State<HabitTrackerPage>
                           tileColor: _habits[index]
                               .primaryColor
                               .harmonizeWith(colorScheme.background),
-                          leading: Icon(_habits[index].iconData, color: _habits[index].flameColor.harmonizeWith(colorScheme.primary),),
+                          leading: Icon(
+                            _habits[index].iconData,
+                            color: _habits[index]
+                                .flameColor
+                                .harmonizeWith(colorScheme.primary),
+                          ),
                           title: Text(
                             _habits[index].title,
                             style: const TextStyle(color: Colors.black),
@@ -684,13 +689,20 @@ class _HabitTrackerPageState extends State<HabitTrackerPage>
     //The Dialog for adding a new habit
     TextEditingController titleController =
         TextEditingController(text: _habits[index].title);
-    TextEditingController numberController =
-        TextEditingController(text: (_habits[index].value).toString());
+    TextEditingController numberController = TextEditingController(
+        text: _habits[index].value == _habits[index].value.toInt()
+            ? _habits[index].value.toInt().toString()
+            : _habits[index].value.toString());
     IconData selectedIcon = availableIcons.first;
-    TextEditingController requiredController =
-        TextEditingController(text: (_habits[index].requiredValue.toString()));
-    TextEditingController timeController =
-        TextEditingController(text: (_habits[index].requiredTime.toString()));
+    TextEditingController requiredController = TextEditingController(
+        text:
+            _habits[index].requiredValue == _habits[index].requiredValue.toInt()
+                ? _habits[index].requiredValue.toInt().toString()
+                : _habits[index].requiredValue.toString());
+    TextEditingController timeController = TextEditingController(
+        text: _habits[index].requiredTime == _habits[index].requiredTime.toInt()
+            ? _habits[index].requiredTime.toInt().toString()
+            : _habits[index].requiredTime.toString());
     String selectedUnit = _habits[index].unit;
     String selectedTimeUnit = _habits[index].timeUnit;
     TextEditingController streakController =
