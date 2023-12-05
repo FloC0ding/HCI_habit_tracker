@@ -54,17 +54,22 @@ class Habit {
   String timeUnit;
   double requiredTime;
   int streak;
+  Color primaryColor;
+  Color flameColor;
 
-  Habit(
-      {required this.title,
-      required this.description,
-      required this.value,
-      required this.iconData,
-      required this.unit,
-      required this.requiredValue,
-      required this.timeUnit,
-      required this.requiredTime,
-      required this.streak});
+  Habit({
+    required this.title,
+    required this.description,
+    required this.value,
+    required this.iconData,
+    required this.unit,
+    required this.requiredValue,
+    required this.timeUnit,
+    required this.requiredTime,
+    required this.streak,
+    required this.primaryColor,
+    required this.flameColor,
+  });
 }
 
 class HabitTrackerPage extends StatefulWidget {
@@ -90,6 +95,71 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     // ... add more, potentially also custom icons and icons not from the Icons class
   ];
   // List storing all the user habits
+  final List<Habit> _habits = [];
+  final List<Habit> _filteredhabits = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _habits.addAll([
+      Habit(
+        title: "Go Running",
+        description: "Go Running",
+        value: 0,
+        iconData: Icons.directions_run,
+        unit: "km",
+        requiredValue: 13.37,
+        timeUnit: "days",
+        requiredTime: 2,
+        streak: 0,
+        primaryColor: getRandomPastelColor(),
+        flameColor: getRandomFlameColor(),
+      ),
+      Habit(
+        title: "Sing",
+        description: "Sing",
+        value: 0,
+        iconData: Icons.music_note,
+        unit: "times",
+        requiredValue: 12,
+        timeUnit: "months",
+        requiredTime: 1,
+        streak: 0,
+        primaryColor: getRandomPastelColor(),
+        flameColor: getRandomFlameColor(),
+      ),
+      Habit(
+        title: "Go to Work",
+        description: "Go to Work",
+        value: 0,
+        iconData: Icons.work,
+        unit: "times",
+        requiredValue: 5,
+        timeUnit: "weeks",
+        requiredTime: 1,
+        streak: 0,
+        primaryColor: getRandomPastelColor(),
+        flameColor: getRandomFlameColor(),
+      ),
+      Habit(
+        title: "Read",
+        description: "Read",
+        value: 0,
+        iconData: Icons.book,
+        unit: "min",
+        requiredValue: 45,
+        timeUnit: "days",
+        requiredTime: 1,
+        streak: 0,
+        primaryColor: getRandomPastelColor(),
+        flameColor: getRandomFlameColor(),
+      ),
+    ]);
+
+    _filteredhabits.addAll(_habits);
+  }
+
+  /*
   final List<Habit> _habits = [
     Habit(
         title: "Go Running",
@@ -100,7 +170,9 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
         requiredValue: 13.37,
         timeUnit: "days",
         requiredTime: 2,
-        streak: 0),
+        streak: 0,
+        primaryColor: getRandomPastelColor(),
+        flameColor: getRandomFlameColor()),
     Habit(
         title: "Sing",
         description: "Sing",
@@ -174,42 +246,92 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
         requiredTime: 1,
         streak: 0),
   ];
+*/
+  List<Color> colors = [
+    Color(0xFFFFF9C4), // Light Yellow
+    Color(0xFFFFE0B2), // Light Orange
+    Color(0xFFFFCCBC), // Light Deep Orange
+    Color(0xFFFFCDD2), // Light Red
+    Color(0xFFF8BBD0), // Light Pink
+    Color(0xFFE1BEE7), // Light Purple
+    Color(0xFFD1C4E9), // Light Deep Purple
+    Color(0xFFC5CAE9), // Light Indigo
+    Color(0xFFBBDEFB), // Light Blue
+    Color(0xFFB3E0F2), // Light Light Blue
+    Color(0xFFB2EBF2), // Light Cyan
+    Color(0xFFB2DFDB), // Light Teal
+    Color(0xFFC8E6C9), // Light Green
+    Color(0xFFDCEDC8), // Light Light Green
+    Color(0xFFF0F4C3), // Light Lime
+  ];
+  List<Color> flameColors = [
+    Color(0xFFFFEB3B), // Yellow
+    Color(0xFFFF9800), // Orange
+    Color(0xFFFF5722), // Deep Orange
+    Color(0xFFF44336), // Red
+    Color(0xFFE91E63), // Pink
+    Color.fromARGB(255, 245, 88, 232), // Purple
+    Color(0xFF673AB7), // Deep Purple
+    Color(0xFF3F51B5), // Indigo
+    Color(0xFF2196F3), // Blue
+    Color(0xFF03A9F4), // Light Blue
+    Color(0xFF00BCD4), // Cyan
+    Color(0xFF009688), // Teal
+    Color(0xFF4CAF50), // Green
+    Color(0xFF8BC34A), // Light Green
+    Color(0xFFCDDC39), // Lime
+  ];
+
+  int currentIndex = 0;
+
+  Color getRandomPastelColor() {
+    Color color = colors[currentIndex];
+    currentIndex = (currentIndex + 1) % colors.length;
+    return color; // Adjust opacity to make it lighter
+  }
+
+  int currentIndex2 = 0;
+
+  Color getRandomFlameColor() {
+    Color color = flameColors[currentIndex];
+    currentIndex = (currentIndex + 1) % flameColors.length;
+    return color; // Adjust opacity to make it lighter
+  }
+
   //Last Habit that was deleted, used for UNDO function
   Habit _lastHabit = Habit(
-      title: "no",
-      description: "no",
-      value: 0,
-      iconData: Icons.book,
-      requiredValue: 1,
-      unit: "",
-      requiredTime: 1,
-      timeUnit: "",
-      streak: 0);
+    title: "no",
+    description: "no",
+    value: 0,
+    iconData: Icons.book,
+    requiredValue: 1,
+    unit: "",
+    requiredTime: 1,
+    timeUnit: "",
+    streak: 0,
+    primaryColor: Colors.white,
+    flameColor: Colors.black,
+  );
   //Self-explanatory: Add a new habit to the list
   void _addHabit(String title, String description, IconData icon, String unit,
       double requiredValue, String timeUnit, double requiredTime) {
     if (title.isNotEmpty) {
       setState(() {
-        _habits.add(Habit(
-            title: title,
-            description: description,
-            value: 0,
-            iconData: icon,
-            requiredValue: requiredValue,
-            unit: unit,
-            requiredTime: requiredTime,
-            timeUnit: timeUnit,
-            streak: 0));
-        _filteredhabits.add(Habit(
-            title: title,
-            description: description,
-            value: 0,
-            iconData: icon,
-            requiredValue: requiredValue,
-            unit: unit,
-            requiredTime: requiredTime,
-            timeUnit: timeUnit,
-            streak: 0));
+        Habit newHabit = Habit(
+          title: title,
+          description: description,
+          value: 0,
+          iconData: icon,
+          requiredValue: requiredValue,
+          unit: unit,
+          requiredTime: requiredTime,
+          timeUnit: timeUnit,
+          streak: 0,
+          primaryColor: getRandomPastelColor(),
+          flameColor: getRandomFlameColor(),
+        );
+        _habits.add(newHabit);
+        _filteredhabits.add(newHabit);
       });
     }
   }
@@ -225,7 +347,9 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
       double requiredValue,
       String timeUnit,
       double requiredTime,
-      int streak) {
+      int streak,
+      Color primaryColor,
+      Color flameColor) {
     setState(() {
       _lastHabit = _habits[index];
       _habits[index] = Habit(
@@ -237,7 +361,9 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
           requiredValue: requiredValue,
           requiredTime: requiredTime,
           timeUnit: timeUnit,
-          streak: streak);
+          streak: streak,
+          primaryColor: primaryColor,
+          flameColor: flameColor);
     });
   }
 
@@ -416,7 +542,9 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                                     _habits[index].requiredValue,
                                     _habits[index].timeUnit,
                                     _habits[index].requiredTime,
-                                    _habits[index].streak + 1);
+                                    _habits[index].streak + 1,
+                                    _habits[index].primaryColor,
+                                    _habits[index].flameColor);
                               }
                             } else {
                               _showSetAmountDialog(index);
@@ -424,6 +552,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                           });
                         },
                         child: ListTile(
+                          tileColor: _habits[index].primaryColor.harmonizeWith(colorScheme.primary),
                           leading: Icon(_habits[index].iconData),
                           title: Text(_habits[index].title),
                           subtitle: Row(
@@ -440,7 +569,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                                   ),
                                   Icon(
                                     Icons.whatshot,
-                                    color: colorScheme.tertiary,
+                                    color: _habits[index].flameColor.harmonizeWith(colorScheme.primary),
                                   ),
                                 ],
                               ),
@@ -621,12 +750,14 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                       decoration: const InputDecoration(labelText: 'Title'),
                     ),
                     TextField(
-                      decoration: const InputDecoration(labelText: 'Current Progress'),
+                      decoration:
+                          const InputDecoration(labelText: 'Current Progress'),
                       keyboardType: TextInputType.number,
                       controller: numberController,
                     ),
                     TextField(
-                      decoration: const InputDecoration(labelText: 'Current Streak'),
+                      decoration:
+                          const InputDecoration(labelText: 'Current Streak'),
                       keyboardType: TextInputType.number,
                       controller: streakController,
                     ),
@@ -717,7 +848,9 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                         double.parse(requiredController.text),
                         selectedTimeUnit,
                         double.parse(timeController.text),
-                        int.parse(streakController.text));
+                        int.parse(streakController.text),
+                        _habits[index].primaryColor,
+                        _habits[index].flameColor);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text("Edited \"${_lastHabit.title}\""),
@@ -778,29 +911,35 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                             _habits[index].value >=
                         _habits[index].requiredValue) {
                       _editHabit(
-                          index,
-                          _habits[index].title,
-                          _habits[index].iconData,
-                          double.parse(amountController.text) +
-                              _habits[index].value -
-                              _habits[index].requiredValue,
-                          _habits[index].unit,
-                          _habits[index].requiredValue,
-                          _habits[index].timeUnit,
-                          _habits[index].requiredTime,
-                          _habits[index].streak + 1);
+                        index,
+                        _habits[index].title,
+                        _habits[index].iconData,
+                        double.parse(amountController.text) +
+                            _habits[index].value -
+                            _habits[index].requiredValue,
+                        _habits[index].unit,
+                        _habits[index].requiredValue,
+                        _habits[index].timeUnit,
+                        _habits[index].requiredTime,
+                        _habits[index].streak + 1,
+                        _habits[index].primaryColor,
+                        _habits[index].flameColor,
+                      );
                     } else {
                       _editHabit(
-                          index,
-                          _habits[index].title,
-                          _habits[index].iconData,
-                          double.parse(amountController.text) +
-                              _habits[index].value,
-                          _habits[index].unit,
-                          _habits[index].requiredValue,
-                          _habits[index].timeUnit,
-                          _habits[index].requiredTime,
-                          _habits[index].streak);
+                        index,
+                        _habits[index].title,
+                        _habits[index].iconData,
+                        double.parse(amountController.text) +
+                            _habits[index].value,
+                        _habits[index].unit,
+                        _habits[index].requiredValue,
+                        _habits[index].timeUnit,
+                        _habits[index].requiredTime,
+                        _habits[index].streak,
+                        _habits[index].primaryColor,
+                        _habits[index].flameColor,
+                      );
                     }
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
