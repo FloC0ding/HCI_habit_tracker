@@ -86,11 +86,21 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
     Icons.book,
     Icons.music_note,
     Icons.work,
+    Icons.directions_run,
+    Icons.directions_bike,
     // ... add more, potentially also custom icons and icons not from the Icons class
   ];
   // List storing all the user habits
-  final List<Habit> _habits = [];
-  final List<Habit> _filteredhabits = [];
+  final List<Habit> _habits = [
+    Habit(title: "Go Running", description: "Go Running", value: 0, iconData: Icons.directions_run, unit: "km", requiredValue: 13.37, timeUnit: "days", requiredTime: 2, streak: 0),
+    Habit(title: "Play Instrument", description: "Play Instrument", value: 0, iconData: Icons.music_note, unit: "times", requiredValue: 12, timeUnit: "months", requiredTime: 1, streak: 0),
+    Habit(title: "Go to Work", description: "Go to Work", value: 0, iconData: Icons.work, unit: "times", requiredValue: 5, timeUnit: "weeks", requiredTime: 1, streak: 0),
+    Habit(title: "Read", description: "Read", value: 0, iconData: Icons.work, unit: "min", requiredValue: 45, timeUnit: "days", requiredTime: 1, streak: 0),];
+  final List<Habit> _filteredhabits = [
+    Habit(title: "Go Running", description: "Go Running", value: 0, iconData: Icons.directions_run, unit: "km", requiredValue: 13.37, timeUnit: "days", requiredTime: 2, streak: 0),
+    Habit(title: "Play Instrument", description: "Play Instrument", value: 0, iconData: Icons.music_note, unit: "times", requiredValue: 12, timeUnit: "months", requiredTime: 1, streak: 0),
+    Habit(title: "Go to Work", description: "Go to Work", value: 0, iconData: Icons.work, unit: "times", requiredValue: 5, timeUnit: "weeks", requiredTime: 1, streak: 0),
+    Habit(title: "Read", description: "Read", value: 0, iconData: Icons.work, unit: "min", requiredValue: 45, timeUnit: "days", requiredTime: 1, streak: 0),];
   //Last Habit that was deleted, used for UNDO function
   Habit _lastHabit =
       Habit(title: "no", description: "no", value: 0, iconData: Icons.book, requiredValue: 1, unit: "", requiredTime: 1, timeUnit: "", streak: 0);
@@ -301,7 +311,7 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                     subtitle: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("${_habits[index].value.toStringAsFixed(1)} / ${_habits[index].requiredValue.toStringAsFixed(1)} ${_habits[index].unit} every ${_habits[index].requiredTime.toStringAsFixed(1)} ${_habits[index].timeUnit}"),
+                        Text("${_habits[index].value == _habits[index].value.toInt() ? _habits[index].value.toInt() : _habits[index].value.toStringAsFixed(1)} / ${_habits[index].requiredValue == _habits[index].requiredValue.toInt() ? _habits[index].requiredValue.toInt() : _habits[index].requiredValue.toStringAsFixed(1)} ${_habits[index].unit == "times" && _habits[index].requiredValue == 1 ? "time" : _habits[index].unit} every ${_habits[index].requiredTime == _habits[index].requiredTime.toInt() ? _habits[index].requiredTime.toInt() : _habits[index].requiredTime.toStringAsFixed(1)} ${_habits[index].requiredTime == 1 && _habits[index].timeUnit.isNotEmpty ? _habits[index].timeUnit.substring(0, _habits[index].timeUnit.length - 1) : _habits[index].timeUnit}"),
                         Row(
                           children: [
                             Text(

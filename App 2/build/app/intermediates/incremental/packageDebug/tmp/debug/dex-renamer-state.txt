@@ -1,4 +1,0 @@
-#Sun Dec 03 13:50:23 CET 2023
-base.0=C\:\\Users\\schlu\\Documents\\ETH\\HS23\\HCI_habit_tracker\\App 2\\build\\app\\intermediates\\dex\\debug\\mergeDexDebug\\classes.dex
-path.0=classes.dex
-renamed.0=classes.dex
