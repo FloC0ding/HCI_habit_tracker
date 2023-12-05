@@ -311,10 +311,9 @@ class _HabitTrackerPageState extends State<HabitTrackerPage> {
                   alignLabelWithHint: true,
                   prefixIcon: Icon(
                     Icons.search,
-                    color: Colors.grey,
+                    color: colorScheme.primary,
                   ),
                   filled: true,
-                  fillColor: const Color.fromARGB(255, 229, 229, 229),
                   contentPadding:
                       EdgeInsets.symmetric(vertical: 0.0, horizontal: 12.0),
                   border: OutlineInputBorder(
